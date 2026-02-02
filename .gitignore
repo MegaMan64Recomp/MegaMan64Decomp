@@ -2,8 +2,13 @@ baserom.us.z64
 megaman64.l
 megaman64.ld
 *.d
+assets
 asm
 bin
 build
 tools/undefined_syms_auto.txt
 tools/undefined_funcs_auto.txt
+tools/gcc_kmc/
+research
+venv
+.venv

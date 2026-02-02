@@ -1,110 +1,192 @@
-# Config
-TARGET := megaman64
+### Build Options ###
 
-BASEROM := baserom.us.z64
-ROM_SIZE := 0xC00000
+BASEROM      := baserom.us.z64
+TARGET       := megaman64
+COMPARE      ?= 1
+NON_MATCHING ?= 0
+CHECK        ?= 1
+VERBOSE      ?= 0
+MOD 		 ?= 0
+
+# Fail early if baserom does not exist
+ifeq ($(wildcard $(BASEROM)),)
+$(error Baserom `$(BASEROM)' not found.)
+endif
+
+# NON_MATCHING=1 implies COMPARE=0
+ifeq ($(NON_MATCHING),1)
+override COMPARE=0
+endif
+
+ifeq ($(VERBOSE),0)
+V := @
+endif
+
+ifeq ($(OS),Windows_NT)
+  DETECTED_OS=windows
+else
+  UNAME_S := $(shell uname -s)
+  ifeq ($(UNAME_S),Linux)
+    DETECTED_OS=linux
+  endif
+  ifeq ($(UNAME_S),Darwin)
+    DETECTED_OS=macos
+    MAKE=gmake
+    CPPFLAGS += -xc++
+  endif
+endif
 
 
-# Folders
+### Output ###
+
 BUILD_DIR := build
-SRC_DIR := src
-ASM_DIR := asm
-BIN_DIR := bin
-#ASM_DIRS := $(filter-out $(wildcard $(ASM_DIR)/*.*), $(wildcard asm/*))
-ASM_DIRS := $(shell find $(ASM_DIR) -type d)
-BIN_DIRS := $(shell find $(BIN_DIR) -type d)
-SRC_DIRS := $(filter-out $(wildcard $(SRC_DIR)/*.*), $(wildcard src/*))
-SRC_BUILD_DIRS := $(addprefix $(BUILD_DIR)/,$(SRC_DIRS))
-ASM_BUILD_DIR := $(BUILD_DIR)/$(ASM_DIR)
-ASM_BUILD_DIRS := $(addprefix $(BUILD_DIR)/,$(ASM_DIRS))
-BIN_BUILD_DIR := $(BUILD_DIR)/$(BIN_DIR)
-BIN_BUILD_DIRS := $(addprefix $(BUILD_DIR)/,$(BIN_DIRS))
-
-# Files
-C_SRCS := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
-C_ASMS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.s))
-C_OBJS := $(C_ASMS:.s=.o)
-AS_SRCS := $(wildcard $(ASM_DIR)/*.s) $(foreach dir,$(ASM_DIRS),$(wildcard $(dir)/*.s))
-AS_OBJS := $(addprefix $(BUILD_DIR)/, $(AS_SRCS:.s=.s.o))
-BINS := $(wildcard $(BIN_DIR)/*.bin)
-BIN_SRCS := $(wildcard $(BIN_DIR)/*.bin) $(foreach dir,$(BIN_DIRS),$(wildcard $(dir)/*.bin))
-BIN_OBJS := $(addprefix $(BUILD_DIR)/, $(BIN_SRCS:.bin=.bin.o))
-OBJS := $(C_OBJS) $(AS_OBJS) $(BIN_OBJS)
-LD_SCRIPT := megaman64.ld
+ROM       := $(BUILD_DIR)/$(TARGET).z64
+ELF       := $(BUILD_DIR)/$(TARGET).elf
+LD_SCRIPT := $(TARGET).ld
 LD_MAP    := $(BUILD_DIR)/$(TARGET).map
-Z64 := $(BUILD_DIR)/$(TARGET).z64
-ELF := $(Z64:.z64=.elf)
 
-# Tools
-CPP := mips-linux-gnu-cpp
-CC := tools/sn/gnu/cc1n64.exe # TODO figure out how to make this work outside WSL
-AS := mips-linux-gnu-gcc
-OBJCOPY := mips-linux-gnu-objcopy
-LD := mips-linux-gnu-ld
-#LD := mips-linux-gnu-gcc
 
-# Flags
-CPPFLAGS := -Iinclude
-CFLAGS := -G0 -mcpu=vr4300 -mips2 -fno-exceptions -funsigned-char -gdwarf \
-   -Wa,-G0,-EB,-mips3,-mabi=32,-mgp32,-march=vr4300,-mfp32,-mno-shared
+### Tools ###
+
+PYTHON		:= venv/bin/python  # Ensure we're using the Python from the virtual environment
+N64CKSUM	:= $(PYTHON) tools/n64cksum.py
+SPLAT_YAML	:= megaman64.yaml
+MOD_YAML	:= megaman64_mod.yaml
+SPLAT	:= $(PYTHON) -m splat split $(SPLAT_YAML)  # Use splat from the virtual environment
+MOD_SPLAT	:= $(PYTHON) -m splat split $(MOD_YAML)  # Use splat from the virtual environment
+MOD_LINKER_INJECT := $(PYTHON) ./tools/append_mod_to_linker_script.py
+MOD_OVL_TABLE_INJECT := $(PYTHON) ./tools/gen_new_overlay_table_file.py
+EMULATOR   := mupen64plus
+DIFF       := diff
+
+CROSS    := mips-linux-gnu-
+AS       := $(CROSS)as
+LD       := $(CROSS)ld
+OBJCOPY  := $(CROSS)objcopy
+STRIP    := $(CROSS)strip
+
+CC       := tools/gcc_kmc/$(DETECTED_OS)/2.7.2/gcc
+CC_HOST  := gcc
+CPP      := cpp -P
+
+PRINT := printf '
+ ENDCOLOR := \033[0m
+ WHITE     := \033[0m
+ ENDWHITE  := $(ENDCOLOR)
+ GREEN     := \033[0;32m
+ ENDGREEN  := $(ENDCOLOR)
+ BLUE      := \033[0;34m
+ ENDBLUE   := $(ENDCOLOR)
+ YELLOW    := \033[0;33m
+ ENDYELLOW := $(ENDCOLOR)
+ PURPLE    := \033[0;35m
+ ENDPURPLE := $(ENDCOLOR)
+ENDLINE := \n'
+
+### Compiler Options ###
+
+ASFLAGS        := -G 0 -I include -mips3 -mabi=32
+CFLAGS         := -G0 -mips3 -mgp32 -mfp32 -Wa,--vr4300mul-off -D_LANGUAGE_C 
+CPPFLAGS     := -I include -I $(BUILD_DIR)/include -I src -I include/PR -DF3DEX_GBI_2 -D_LANGUAGE_C
+LDFLAGS        := -T undefined_syms.txt -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T $(LD_SCRIPT) -Map $(LD_MAP) --no-check-sections
+CHECK_WARNINGS := -Wall -Wextra -Wunused-but-set-variable -Wno-format-security -Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast -m32
+CFLAGS_CHECK   := -fcommon -fsyntax-only -fsigned-char -nostdinc -fno-builtin -D CC_CHECK -D _LANGUAGE_C -std=gnu90 $(CHECK_WARNINGS)
+
+ifneq ($(CHECK),1)
+CFLAGS_CHECK += -w
+endif
+
+ifeq ($(MOD),1)
+CFLAGS += -DMOD
+CPPFLAGS += -DMOD
+endif
+
 OPTFLAGS := -O2
-ASFLAGS := -march=vr4300 -mabi=32 -mgp32 -mfp32 -mips3 -mno-abicalls -G0 -fno-pic -gdwarf -c -I include
-BINOFLAGS := -I binary -O elf32-tradbigmips
-CPP_LDFLAGS := -P -Wno-trigraphs -DBUILD_DIR=$(BUILD_DIR)
-#LDFLAGS := $(LD_SCRIPT) --accept-unknown-input-arch -T undefined_syms_auto.txt --no-check-sections -T undefined_syms.txt
-#LDFLAGS := -march=vr4300 -mabi=32 -mgp32 -mfp32 -mips3 -mno-abicalls -G0 -fno-pic -gdwarf -nostartfiles -Wl,-T,$(LD_SCRIPT) -Wl,-T,undefined_syms_auto.txt undefined_funcs_auto.txt -Wl,--build-id=none
-LDFLAGS  := -T undefined_syms.txt -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T $(LD_SCRIPT) -Map $(LD_MAP) --no-check-sections
-#LDFLAGS   := -march=vr4300 -mabi=32 -mgp32 -mfp32 -mips3 -mno-abicalls -G0 -fno-pic -gdwarf -nostartfiles -nostdlib -Wl,-T,undefined_syms_auto.txt undefined_funcs_auto.txt symbol_addrs.txt undefined_syms.txt -Wl,--build-id=none -Wl,--emit-relocs \
-	-Wl,--whole-archive
-Z64OFLAGS := -O binary --gap-fill=0x00
 
-MKDIR := mkdir -p
-RMDIR := rm -rf
-DIFF := diff
+### Sources ###
 
-all: check
+# Object files
+OBJECTS := $(shell grep -E 'build.+\.o' megaman64.ld -o)
+DEPENDS := $(OBJECTS:=.d) 
 
-$(BUILD_DIR) :
-	$(MKDIR) $(BUILD_DIR)
+### Targets ###
 
-$(SRC_DIR) $(SRC_BUILD_DIRS) $(ASM_BUILD_DIRS) $(BIN_BUILD_DIRS) :
-	$(MKDIR) $@
-	@echo $(BIN_BUILD_DIRS)
+# build/src/2.0L/%.o: CFLAGS := -O2 $(CFLAGSCOMMON)
 
-$(BUILD_DIR)/%.s.o : $(BUILD_DIR)/%.s
-	$(AS) $(ASFLAGS) $(CPPFLAGS) $< -o $@
+all: $(ROM)
 
-$(BUILD_DIR)/%.s.o : %.s | $(ASM_BUILD_DIRS) $(SRC_BUILD_DIRS)
-	$(AS) $(ASFLAGS) $(CPPFLAGS) $< -o $@
+-include $(DEPENDS)
 
-$(BUILD_DIR)/%.bin.o : %.bin | $(BIN_BUILD_DIR)
-	$(OBJCOPY) $(BINOFLAGS) $< $@
-	
-#$(ELF) : $(OBJS)
-#	$(LD) -Wl,-T,$(LD_SCRIPT) -Wl,-Map,$(@:.elf=.map) $(LDFLAGS) -o $@
-
-$(BUILD_DIR)/$(TARGET).elf: $(OBJS)
-	$(LD) $(LDFLAGS) -o $@
-
-$(Z64) : $(ELF)
-	$(OBJCOPY) $(Z64OFLAGS) $< $@
-	@readelf -s ./build/megaman64.elf > ./research/readELF.txt
-	
 clean:
-	$(RMDIR) $(BUILD_DIR)
+	$(V)rm -rf build
 
-check: $(Z64)
-	@$(DIFF) $(BASEROM) $(Z64) && printf "OK\n"
+distclean: clean
+	$(V)rm -rf asm
+	$(V)rm -rf assets
+	$(V)rm -f *auto.txt
+	$(V)rm -f megaman64.ld
+	$(V)rm -f include/ld_addrs.h
 
-setup:
-	$(RMDIR) $(ASM_DIR) $(BIN_DIR)
-	tools/splat/split.py megaman64.yaml
+setup: distclean split
 
-.SUFFIXES:
+modsetup: distclean modsplit
+
+modsplit:
+	$(V)rm -rf asm
+	$(V)$(MOD_OVL_TABLE_INJECT)
+	$(V)$(MOD_SPLAT)
+	$(V)$(MOD_LINKER_INJECT)
+
+split:
+	$(V)rm -rf asm
+	$(V)$(SPLAT)
+	
+test: $(ROM)
+	$(V)$(EMULATOR) $<
+
+# Flags for individual files. TODO: move these to a common directory and make this a directory thing instead
+#build/src/2.0L/audio/%.c.o: OPTFLAGS = -O2
+
+# Compile .c files with kmc gcc (use strip to fix objects so that they can be linked with modern gnu ld) 
+$(BUILD_DIR)/src/%.c.o: src/%.c
+	@$(PRINT)$(GREEN)Compiling C file: $(ENDGREEN)$(BLUE)$<$(ENDBLUE)$(ENDLINE)
+	@mkdir -p $(shell dirname $@)
+	@$(CC_HOST) $(CFLAGS_CHECK) $(CPPFLAGS) -MMD -MP -MT $@ -MF $@.d $<
+	$(V)export COMPILER_PATH=tools/gcc_kmc/$(DETECTED_OS)/2.7.2 && $(CC) $(OPTFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+	@$(STRIP) $@ -N dummy-symbol-name
+
+# Assemble .s files with modern gnu as
+$(BUILD_DIR)/asm/%.s.o: asm/%.s
+	@$(PRINT)$(GREEN)Assembling asm file: $(ENDGREEN)$(BLUE)$<$(ENDBLUE)$(ENDLINE)
+	@mkdir -p $(shell dirname $@)
+	$(V)$(AS) $(ASFLAGS) -o $@ $<
+
+# Create .o files from .bin files.
+$(BUILD_DIR)/%.bin.o: %.bin
+	@$(PRINT)$(GREEN)objcopying binary file: $(ENDGREEN)$(BLUE)$<$(ENDBLUE)$(ENDLINE)
+	@mkdir -p $(shell dirname $@)
+	$(V)$(LD) -r -b binary -o $@ $<
+
+# Link the .o files into the .elf
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS)
+	@$(PRINT)$(GREEN)Linking elf file: $(ENDGREEN)$(BLUE)$@$(ENDBLUE)$(ENDLINE)
+	$(V)$(LD) $(LDFLAGS) -o $@
+
+# Convert the .elf to the final rom
+$(ROM): $(BUILD_DIR)/$(TARGET).elf
+	@$(PRINT)$(GREEN)Creating z64: $(ENDGREEN)$(BLUE)$@$(ENDBLUE)$(ENDLINE)
+	$(V)$(OBJCOPY) $< $@ -O binary
+	$(V)$(N64CKSUM) $@
+ifeq ($(COMPARE),1)
+	@$(DIFF) $(BASEROM) $(ROM) && printf "OK\n" || (echo 'The build succeeded, but did not match the base ROM. This is expected if you are making changes to the game. To skip this check, use "make COMPARE=0".' && false)
+endif
+
+### Make Settings ###
+
+.PHONY: all clean distclean test setup split
+
+# Remove built-in implicit rules to improve performance
 MAKEFLAGS += --no-builtin-rules
 
-keep-asm: $(C_ASMS)
-
-.PHONY: all keep-asm clean check setup
-
+# Print target for debugging
 print-% : ; $(info $* is a $(flavor $*) variable set to [$($*)]) @true

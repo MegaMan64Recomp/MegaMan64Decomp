@@ -1,0 +1,10 @@
+ninja_syntax
+splat64[mips]==0.32.2
+spimdisasm==1.32.1
+GitPython
+colour
+colorama
+ansiwrap
+watchdog
+python-Levenshtein
+cxxfilt
