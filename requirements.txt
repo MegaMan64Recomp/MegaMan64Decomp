@@ -1,6 +1,6 @@
 ninja_syntax
-splat64[mips]==0.32.2
-spimdisasm==1.32.1
+splat64[mips]==0.35.2
+spimdisasm==1.37.0
 GitPython
 colour
 colorama
@@ -8,3 +8,7 @@ ansiwrap
 watchdog
 python-Levenshtein
 cxxfilt
+
+# permuter
+pycparser>=2.22,<3.0.0
+toml>=0.10.2

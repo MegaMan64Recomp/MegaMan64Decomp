@@ -48,12 +48,12 @@ LD_MAP    := $(BUILD_DIR)/$(TARGET).map
 
 ### Tools ###
 
-PYTHON		:= venv/bin/python  # Ensure we're using the Python from the virtual environment
+PYTHON		:= venv/bin/python
 N64CKSUM	:= $(PYTHON) tools/n64cksum.py
 SPLAT_YAML	:= megaman64.yaml
 MOD_YAML	:= megaman64_mod.yaml
-SPLAT	:= $(PYTHON) -m splat split $(SPLAT_YAML)  # Use splat from the virtual environment
-MOD_SPLAT	:= $(PYTHON) -m splat split $(MOD_YAML)  # Use splat from the virtual environment
+SPLAT	:= $(PYTHON) -m splat split $(SPLAT_YAML)
+MOD_SPLAT	:= $(PYTHON) -m splat split $(MOD_YAML)
 MOD_LINKER_INJECT := $(PYTHON) ./tools/append_mod_to_linker_script.py
 MOD_OVL_TABLE_INJECT := $(PYTHON) ./tools/gen_new_overlay_table_file.py
 EMULATOR   := mupen64plus
@@ -86,8 +86,8 @@ ENDLINE := \n'
 ### Compiler Options ###
 
 ASFLAGS        := -G 0 -I include -mips3 -mabi=32
-CFLAGS         := -G0 -mips3 -mgp32 -mfp32 -Wa,--vr4300mul-off -D_LANGUAGE_C 
-CPPFLAGS     := -I include -I $(BUILD_DIR)/include -I src -I include/PR -DF3DEX_GBI_2 -D_LANGUAGE_C
+CFLAGS         := -G0 -mips3 -mgp32 -mfp32 -D_LANGUAGE_C -D_FINALROM=0 -DNDEBUG
+CPPFLAGS       := -I include -I $(BUILD_DIR)/include -I src -I include/PR -DF3DEX_GBI_2 -D_LANGUAGE_C -D_MIPS_SZLONG=32
 LDFLAGS        := -T undefined_syms.txt -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T $(LD_SCRIPT) -Map $(LD_MAP) --no-check-sections
 CHECK_WARNINGS := -Wall -Wextra -Wunused-but-set-variable -Wno-format-security -Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast -m32
 CFLAGS_CHECK   := -fcommon -fsyntax-only -fsigned-char -nostdinc -fno-builtin -D CC_CHECK -D _LANGUAGE_C -std=gnu90 $(CHECK_WARNINGS)
@@ -101,7 +101,7 @@ CFLAGS += -DMOD
 CPPFLAGS += -DMOD
 endif
 
-OPTFLAGS := -O2
+OPTFLAGS := -O3
 
 ### Sources ###
 
@@ -110,8 +110,6 @@ OBJECTS := $(shell grep -E 'build.+\.o' megaman64.ld -o)
 DEPENDS := $(OBJECTS:=.d) 
 
 ### Targets ###
-
-# build/src/2.0L/%.o: CFLAGS := -O2 $(CFLAGSCOMMON)
 
 all: $(ROM)
 
@@ -143,9 +141,6 @@ split:
 	
 test: $(ROM)
 	$(V)$(EMULATOR) $<
-
-# Flags for individual files. TODO: move these to a common directory and make this a directory thing instead
-#build/src/2.0L/audio/%.c.o: OPTFLAGS = -O2
 
 # Compile .c files with kmc gcc (use strip to fix objects so that they can be linked with modern gnu ld) 
 $(BUILD_DIR)/src/%.c.o: src/%.c

@@ -7,25 +7,33 @@ options:
   base_path: .
   platform: n64
   compiler: KMC
-  find_file_boundaries: True
   header_encoding: ASCII
   
   # asm_path: asm
   # src_path: src
   # asset_path: bin
+  # nonmatchings_path: nonmatching
+  # matchings_path: matching
   build_path: build
-  # create_asm_dependencies: True
   #symbol_name_format: $VRAM_$ROM
+
+  make_full_disasm_for_code: True
+  # disassemble_all: True
+  # do_c_func_detection: False
+  find_file_boundaries: False
+  # pair_rodata_to_text: False
 
   ld_script_path: megaman64.ld
   ld_dependencies: True
   ld_symbol_header_path: include/ld_addrs.h
+  ld_bss_contains_common: True
+  ld_bss_is_noload: True
 
   #o_as_suffix: True
   use_legacy_include_asm: False
-  create_asm_dependencies: True
-  detect_redundant_function_end: False
-  mips_abi_float_regs: o32 #something isn't set up correctly for this...unsure what
+  # create_asm_dependencies: True
+  # detect_redundant_function_end: False
+  mips_abi_float_regs: o32
 
   asm_function_macro: glabel
   asm_jtbl_label_macro: jlabel
@@ -46,8 +54,8 @@ options:
 
   # string_encoding: ASCII
   # data_string_encoding: ASCII
-  rodata_string_guesser_level: 2
-  data_string_guesser_level: 2
+  rodata_string_guesser_level: 0
+  data_string_guesser_level: 0
   # libultra_symbols: True
   # hardware_regs: True
   # gfx_ucode: # one of [f3d, f3db, f3dex, f3dexb, f3dex2]
@@ -62,7 +70,8 @@ segments:
     start: 0x40
   
   - name: main
-    find_file_boundaries: false
+    find_file_boundaries: False
+    suggestion_rodata_section_start: False
     symbol_name_format: $VRAM_$ROM
     type: code
     start: 0x1000
@@ -71,7 +80,7 @@ segments:
     bss_size: 0x14A500
     subsegments:
       - [0x1000, hasm, entry]
-      - [0x01060, asm, codeseg1/code_1]
+      - [0x01060, c, codeseg1/code_1]
       - [0x01500, asm, codeseg1/code_2]
       - [0x01D30, asm, codeseg1/code_3]
     #  - [0x02950, asm, codeseg1/code_4] # Merge for RODATA AD060
@@ -86,7 +95,7 @@ segments:
       - [0x07AF0, asm, codeseg1/code_13]
       - [0x07ED0, asm, codeseg1/code_14]
       - [0x0A190, asm, codeseg1/code_15]
-      - [0x0B130, asm, codeseg1/code_16]
+      - [0x0B130, c, codeseg1/code_16]
       - [0x0DCE0, asm, codeseg1/code_17]
       - [0x0DD20, asm, codeseg1/code_18]
       - [0x0E3C0, asm, codeseg1/code_19]
@@ -113,7 +122,7 @@ segments:
     #  - [0x34720, asm, codeseg1/code_39]
       - [0x38060, asm, codeseg1/code_40]
     #  - [0x39F40, asm, codeseg1/code_41]
-      - [0x3A950, asm, codeseg1/code_42]
+      - [0x3A950, asm, codeseg1/cutscene] #Cutscene
       - [0x3B5D0, asm, codeseg1/code_43]
       - [0x3C780, asm, codeseg1/code_44]
       - [0x44C60, asm, codeseg1/code_45]
@@ -189,277 +198,293 @@ segments:
       - [0x6E350, asm, codeseg1/code_108]
       - [0x6E460, asm, codeseg1/code_109]
       - [0x6E490, asm, codeseg1/code_110]
-      - [0x6E4A0, asm, settime]
-      - [0x6E4C0, asm]
-      - [0x6F860, hasm, setintmask]
-      - [0x6F900, asm, pimgr]
-      - [0x6FA90, asm, epirawdma]
-      - [0x6FC80, asm, epidma]
-      - [0x6FD20, asm, cartrominit]
-      - [0x6FEA0, asm, devmgr]
-      - [0x70260, asm]
-      - [0x70350, asm, pidma]
-      - [0x70400, asm, flashinit]
-      - [0x70510, asm, flashreadid]
-      - [0x70610, asm, flashallerase]
-      - [0x70750, asm, flashsectorerase]
-      - [0x708A0, asm, flashwritebuffer]
-      - [0x70940, asm, flashwritearray]
-      - [0x70A90, asm, flashreadarray]
-      - [0x70C40, asm, aigetlen]
-      - [0x70C50, asm, aigetstat]
-      - [0x70C60, asm, aisetfreq]
-      - [0x70D80, asm, aisetnextbuf]
-      - [0x70E20, asm, drvrnew]
-      - [0x71650, asm, load]
-      - [0x72160, asm, auxbus]
-      - [0x72270, asm, env]
-      - [0x72F20, asm, filter]
-      - [0x72F40, asm, mainbus]
-      - [0x730B0, asm, resample]
-      - [0x73360, asm, reverb]
-      - [0x73F00, asm, save]
-      - [0x73FD0, asm, sl]
-      - [0x74080, asm, heapinit]
-      - [0x740C0, asm, heapalloc]
-      - [0x74110, asm, copy] # common form
-      - [0x74150, asm, synthesizer]
-      - [0x74790, asm, syndelete]
-      - [0x747A0, asm, synallocfx]
+      - [0x6E4A0, asm, settime] #manual implementation of osSetTime?
+      - [0x6E4C0, asm, codeseg1/code_112]
+
+      # Libultra
+      - [0x6F860, hasm, libultra/os/setintmask]
+      - [0x6F900, c, libultra/io/pimgr]
+      - [0x6FA90, c, libultra/io/epirawdma]
+      - [0x6FC80, c, libultra/io/epidma]
+      - [0x6FD20, c, libultra/io/cartrominit]
+      - [0x6FEA0, c, libultra/io/devmgr]
+      - [0x70260, c, libultra/io/piacs]
+      - [0x70350, c, libultra/io/pidma]
+      - [0x70400, c, libultra/flash/flashinit]
+      - [0x70510, c, libultra/flash/flashreadid]
+      - [0x70610, c, libultra/flash/flashallerase]
+      - [0x70750, c, libultra/flash/flashsectorerase]
+      - [0x708A0, c, libultra/flash/flashwritebuffer]
+      - [0x70940, c, libultra/flash/flashwritearray]
+      - [0x70A90, c, libultra/flash/flashreadarray]
+      - [0x70C40, c, libultra/io/aigetlen]
+      - [0x70C50, c, libultra/io/aigetstat]
+      - [0x70C60, c, libultra/io/aisetfreq]
+      - [0x70D80, c, libultra/io/aisetnextbuf]
+      - [0x70E20, c, libultra/audio/drvrnew]
+      - [0x71650, c, libultra/audio/load]
+      - [0x72160, c, libultra/audio/auxbus]
+      - [0x72270, c, libultra/audio/env]
+      - [0x72F20, c, libultra/audio/filter]
+      - [0x72F40, c, libultra/audio/mainbus]
+      - [0x730B0, c, libultra/audio/resample]
+      - [0x73360, c, libultra/audio/reverb]
+      - [0x73F00, c, libultra/audio/save]
+      - [0x73FD0, c, libultra/audio/sl]
+      - [0x74080, c, libultra/audio/heapinit]
+      - [0x740C0, c, libultra/audio/heapalloc]
+      - [0x74110, c, libultra/audio/copy]
+      - [0x74150, c, libultra/audio/synthesizer]
+      - [0x74790, c, libultra/audio/syndelete]
+      - [0x747A0, c, libultra/audio/synallocfx]
       - [0x74840, hasm, invaldcache]
       - [0x748F0, hasm, invalicache]
       - [0x74970, hasm, writebackdcache]
       - [0x749F0, hasm, writebackdcacheall]
-      - [0x74A20, asm, contquery]
-      - [0x74AC0, asm, contreaddata]
-      - [0x74CA0, asm, controller]
-      - [0x74FB0, asm, virtualtophysical]
-      - [0x75010, asm, cosf]
-      - [0x75160, asm, coss]
-      - [0x75190, asm, sinf]
-      - [0x75330, asm, sins]
-      - [0x75390, hasm, bcopy]
-      - [0x756B0, hasm, bzero]
-      - [0x75750, asm, string]
-      - [0x757E0, asm, sprintf]
-      - [0x75870, asm, createmesgqueue]
-      - [0x758A0, asm, jammesg]
-      - [0x759E0, asm, recvmesg]
-      - [0x75B10, asm, sendmesg]
-      - [0x75C40, asm, seteventmesg]
-      - [0x75CF0, asm, sptask]
-      - [0x75F30, asm, sptaskyield]
-      - [0x75F50, asm, sptaskyielded]
-      - [0x75FA0, asm, sched]
-      - [0x769B0, asm, sirawdma]
-      - [0x76A60, asm]
-      - [0x76B50, asm, createthread]
-      - [0x76C20, asm, destroythread]
-      - [0x76D00, asm, getthreadpri]
-      - [0x76D20, asm, setthreadpri]
-      - [0x76DF0, asm, startthread]
-      - [0x76F10, asm, stopthread]
-      - [0x76FD0, asm, thread]
-      - [0x77010, asm, yieldthread]
-      - [0x77060, asm, gettime]
-      - [0x770F0, asm, settimer]
-      - [0x77220, asm, timerintr]
-      - [0x77540, hasm, probetlb]
-      - [0x77600, hasm, unmaptlball]
-      - [0x77650, asm]
-      - [0x776D0, asm, vimgr]
-      - [0x77A10, asm, visetevent]
-      - [0x77A70, asm, visetmode]
-      - [0x77AC0, asm, visetspecial]
-      - [0x77C30, asm, visetyscale]
-      - [0x77C80, asm, viswapbuf]
-      - [0x77CD0, asm, viswapcontext]
-      - [0x77FE0, asm, viblack]
-      - [0x78040, asm, mtxident]
-      - [0x780A0, asm, mtxidentf]
-      - [0x78100, asm, mtxf2l]
-      - [0x78180, asm, motor]
-      - [0x78510, asm, pfsallocatefile]
-      - [0x78940, asm, pfsdeletefile]
-      - [0x78B60, asm, pfsreadwritefile]
-      - [0x78FA0, asm, pfsfilestate]
-      - [0x79140, asm, pfssearchfile]
-      - [0x79300, asm, pfsfreeblocks]
-      - [0x79410, asm, pfsnumfiles]
-      - [0x79510, asm, pfsinitpak]
-      - [0x797E0, asm, pfsrepairid]
-      - [0x79840, asm, pfsgetstatus]
-      - [0x79A50, asm, pfsselectbank]
-      - [0x79AC0, asm, contpfs]
-      - [0x7A550, asm, contramread]
-      - [0x7A740, asm, contramwrite]
-      - [0x7A950, asm]
-      - [0x7A9B0, asm, afterprenmi]
-      - [0x7A9D0, asm, initialize]
-      - [0x7AD70, hasm, exceptasm]
-      - [0x7B6E0, hasm, interrupt]
-      - [0x7B770, asm, setglobalintmask]
-      - [0x7B7B0, asm, resetglobalintmask]
-      - [0x7B800, asm, pirawdma]
-      - [0x7B8D0, asm, pigetcmdq]
-      - [0x7B8F0, asm, epirawread]
-      - [0x7BA60, asm, epirawwrite]
-      - [0x7BBD0, asm]
-      - [0x7BC90, asm, epilinkhandle]
-      - [0x7BCE0, asm, flashgetaddr]
-      - [0x7BD00, asm, flashreadstatus]
-      - [0x7BDA0, asm, flashclearstatus]
-      - [0x7BE00, asm, ai]
-      - [0x7BE20, hasm, bcmp]
-      - [0x7BF30, asm, xprintf]
-      - [0x7C980, asm, dpsetnextbuf]
-      - [0x7CA20, hasm, getcause]
-      - [0x7CA30, hasm, getcount]
-      - [0x7CA40, hasm, getsr]
-      - [0x7CA50, hasm, setcompare]
-      - [0x7CA60, hasm, setfpccsr]
-      - [0x7CA70, hasm, setsr]
-      - [0x7CA80, hasm, setwatchlo]
-      - [0x7CA90, asm, sp]
-      - [0x7CAB0, asm, spgetstat]
-      - [0x7CAC0, asm, spsetstat]
-      - [0x7CAD0, asm, spsetpc]
-      - [0x7CB00, asm, sprawdma]
-      - [0x7CB90, asm, sirawread] # ambiguous
-      - [0x7CBE0, asm, sirawwrite] # ambiguous
-      - [0x7CC30, asm, crc]
-      - [0x7CD20, hasm, maptlbrdb]
-      - [0x7CD80, asm, vi]
-      - [0x7CE90, asm]
-      - [0x7CEA0, asm, pfschecker]
-      - [0x7D5C0, asm, pfsisplug]
-      - [0x7D8A0, asm, xlitob]
-      - [0x7DAF0, asm, xldtob]
-      - [0x7E580, asm, dp]
-      - [0x7E5A0, asm, si]
-      - [0x7E5C0, asm, ldiv]
+      - [0x74A20, c, libultra/io/contquery]
+      - [0x74AC0, c, libultra/io/contreaddata]
+      - [0x74CA0, c, libultra/io/controller]
+      - [0x74FB0, c, libultra/os/virtualtophysical]
+      - [0x75010, c, libultra/gu/cosf]
+      - [0x75160, c, libultra/gu/coss]
+      - [0x75190, c, libultra/gu/sinf]
+      - [0x75330, c, libultra/gu/sins]
+      - [0x75390, hasm, libultra/libc/bcopy]
+      - [0x756B0, hasm, libultra/libc/bzero]
+      - [0x75750, c, libultra/libc/string]
+      - [0x757E0, asm, libultra/libc/sprintf]
+      - [0x75870, c, libultra/os/createmesgqueue]
+      - [0x758A0, c, libultra/os/jammesg]
+      - [0x759E0, c, libultra/os/recvmesg]
+      - [0x75B10, c, libultra/os/sendmesg]
+      - [0x75C40, c, libultra/os/seteventmesg]
+      - [0x75CF0, c, libultra/io/sptask]
+      - [0x75F30, c, libultra/io/sptaskyield]
+      - [0x75F50, c, libultra/io/sptaskyielded]
+      - [0x75FA0, c, libultra/sched/sched]
+      - [0x769B0, c, libultra/io/sirawdma]
+      - [0x76A60, c, libultra/io/siacs]
+      - [0x76B50, c, libultra/os/createthread]
+      - [0x76C20, c, libultra/os/destroythread]
+      - [0x76D00, c, libultra/os/getthreadpri]
+      - [0x76D20, c, libultra/os/setthreadpri]
+      - [0x76DF0, c, libultra/os/startthread]
+      - [0x76F10, c, libultra/os/stopthread]
+      - [0x76FD0, c, libultra/os/thread]
+      - [0x77010, c, libultra/os/yieldthread]
+      - [0x77060, c, libultra/os/gettime]
+      - [0x770F0, c, libultra/os/settimer]
+      - [0x77220, c, libultra/os/timerintr]
+      - [0x77540, hasm, libultra/os/probetlb]
+      - [0x77600, hasm, libultra/os/unmaptlball]
+      - [0x77650, c, libultra/io/vigetcurrframebuf]
+      - [0x77690, c, libultra/io/vigetnextframebuf]
+      - [0x776D0, c, libultra/io/vimgr]
+      - [0x77A10, c, libultra/io/visetevent]
+      - [0x77A70, c, libultra/io/visetmode]
+      - [0x77AC0, c, libultra/io/visetspecial]
+      - [0x77C30, c, libultra/io/visetyscale]
+      - [0x77C80, c, libultra/io/viswapbuf]
+      - [0x77CD0, c, libultra/io/viswapcontext]
+      - [0x77FE0, c, libultra/io/viblack]
+      - [0x78040, hasm, libultra/gu/gumtxident]
+      - [0x780A0, hasm, libultra/gu/mtxidentf]
+      - [0x78100, hasm, libultra/gu/mtxf2l]
+      - [0x78180, c, libultra/io/motor]
+      - [0x78510, c, libultra/io/pfsallocatefile]
+      - [0x78940, c, libultra/io/pfsdeletefile]
+      - [0x78B60, c, libultra/io/pfsreadwritefile]
+      - [0x78FA0, c, libultra/io/pfsfilestate]
+      - [0x79140, c, libultra/io/pfssearchfile]
+      - [0x79300, c, libultra/io/pfsfreeblocks]
+      - [0x79410, c, libultra/io/pfsnumfiles]
+      - [0x79510, c, libultra/io/pfsinitpak]
+      - [0x797E0, c, libultra/io/pfsrepairid]
+      - [0x79840, c, libultra/io/pfsgetstatus]
+      - [0x79A50, c, libultra/io/pfsselectbank]
+      - [0x79AC0, c, libultra/io/contpfs]
+      - [0x7A550, c, libultra/io/contramread]
+      - [0x7A740, c, libultra/io/contramwrite]
+      - [0x7A950, pad, nops_7A950]
+      - [0x7A9B0, c, libultra/os/afterprenmi]
+      - [0x7A9D0, c, libultra/os/initialize]
+      - [0x7AD70, hasm, libultra/os/exceptasm]
+      - [0x7B6E0, hasm, libultra/os/interrupt]
+      - [0x7B770, c, libultra/os/setglobalintmask]
+      - [0x7B7B0, c, libultra/os/resetglobalintmask]
+      - [0x7B800, c, libultra/io/pirawdma]
+      - [0x7B8D0, c, libultra/io/pigetcmdq]
+      - [0x7B8F0, c, libultra/io/epirawread]
+      - [0x7BA60, c, libultra/io/epirawwrite]
+      - [0x7BBD0, c, libultra/io/epiwrite]
+      - [0x7BC30, c, libultra/io/epiread]
+      - [0x7BC90, c, libultra/io/epilinkhandle]
+      - [0x7BCE0, c, libultra/flash/flashgetaddr]
+      - [0x7BD00, c, libultra/flash/flashreadstatus]
+      - [0x7BDA0, c, libultra/flash/flashclearstatus]
+      - [0x7BE00, c, libultra/io/ai]
+      - [0x7BE20, hasm, libultra/libc/bcmp]
+      - [0x7BF30, asm, libultra/libc/xprintf]
+      - [0x7C980, c, libultra/io/dpsetnextbuf]
+      - [0x7CA20, hasm, libultra/os/getcause]
+      - [0x7CA30, hasm, libultra/os/getcount]
+      - [0x7CA40, hasm, libultra/os/getsr]
+      - [0x7CA50, hasm, libultra/os/setcompare]
+      - [0x7CA60, hasm, libultra/os/setfpccsr]
+      - [0x7CA70, hasm, libultra/os/setsr]
+      - [0x7CA80, hasm, libultra/os/setwatchlo]
+      - [0x7CA90, c, libultra/io/sp]
+      - [0x7CAB0, c, libultra/io/spgetstat]
+      - [0x7CAC0, c, libultra/io/spsetstat]
+      - [0x7CAD0, c, libultra/io/spsetpc]
+      - [0x7CB00, c, libultra/io/sprawdma]
+      - [0x7CB90, c, libultra/io/sirawread]
+      - [0x7CBE0, c, libultra/io/sirawwrite]
+      - [0x7CC30, c, libultra/io/crc]
+      - [0x7CD20, hasm, libultra/os/maptlbrdb]
+      - [0x7CD80, c, libultra/io/vi]
+      - [0x7CE90, c, libultra/io/vigetcurrcontext]
+      - [0x7CEA0, c, libultra/io/pfschecker]
+      - [0x7D5C0, c, libultra/io/pfsisplug]
+      - [0x7D8A0, asm, libultra/libc/xlitob]
+      - [0x7DAF0, asm, libultra/libc/xldtob]
+      - [0x7E580, c, libultra/io/dp]
+      - [0x7E5A0, c, libultra/io/si]
+      - [0x7E5C0, asm, libultra/libc/ldiv]
       - [0x7EE40, bin, rspboot_code]
       - [0x7EF10, bin, n_aspMain_code]
       - [0x7FB70, bin, f3dex2]
       - [0x80F00, bin, l3dex2]
-    #   ##### DATA START ####
-      - [0x82090, bin, all_data]
-    #  - [0x82090, data, codeseg1/code_1]
-    #  - [0x820B0, bin, f3dex2_data]
-    #  - [0x82340, data, codeseg1/code_11]
-    #  - [0x83C10, data, codeseg1/code_15]
-    #  - [0x83C60, data, codeseg1/code_16]
-    #  - [0x841A0, data, codeseg1/code_19]
-    #  - [0x87B50, data, codeseg1/code_20]
-    #  - [0x87CF0, data, codeseg1/code_22]
-    #  - [0x87D50, data, codeseg1/code_23]
-    #  - [0x87D60, data, codeseg1/code_25]
-    #  - [0x87D80, data, codeseg1/code_26]
-    #  - [0x87DE0, data, codeseg1/code_28]
-    #  - [0x87E10, data, codeseg1/code_29]
-    #  - [0x87EB0, data, codeseg1/code_31]
-    #  - [0x89950, data, codeseg1/code_37]
-    #  - [0x89D30, data, codeseg1/code_39]
-    #  - [0x8A050, data, codeseg1/code_40]
-    #  - [0x8B8D4, data, codeseg1/code_42]
-    #  - [0x8B8F0, data, codeseg1/code_43]
-    #  - [0x8BB50, data, codeseg1/code_44]
-    #  - [0x98680, data, codeseg1/code_60]
-    #  - [0x98690, data, codeseg1/code_61]
-    #  - [0x986E0, data, codeseg1/code_62]
-    #  - [0x986F0, data, codeseg1/code_63]
-    #  - [0x98740, data, codeseg1/code_64]
-    #  - [0x99370, data, codeseg1/code_65]
-    #  - [0xA1670, data, codeseg1/code_66]
-    #  - [0xA9C50, data, codeseg1/code_67]
-    #  - [0xA9D20, data, codeseg1/code_69]
-    #  - [0xA9DA0, data, codeseg1/code_70]
-    #  - [0xA9E00, data, codeseg1/code_71]
-    #  - [0xA9E30, data, codeseg1/code_72]
-    #  - [0xA9F30, data, codeseg1/code_75]
-    #  - [0xA9F50, data, codeseg1/code_76]
-    #  - [0xA9F70, data, MusStartSong]
-    #  - [0xAA030, data, Fchangefx]
-    #  - [0xAA240, data, codeseg1/code_81]
-    #  - [0xAA270, data, codeseg1/code_83]
-    #  - [0xAA270, data, n_alFxNew]
-    #  - [0xAA400, data, n_alEnvmixerPull]
-    #  - [0xAA510, data, codeseg1/code_95]
-    #  - [0xAA520, data, codeseg1/code_99]
-    #  - [0xAA540, data, codeseg1/code_101]
-    #  - [0xAA550, data, codeseg1/code_102]
-    #  - [0xAA570, data, codeseg1/code_113]
-    #  - [0xAA5B0, data, codeseg1/code_114]
-    #  - [0xAA5E0, data, codeseg1/code_116]
-    #  - [0xAA5F0, data, codeseg1/code_118]
-    #  - [0xAA620, data, CreatePiManager]
-    #  - [0xAA650, data, osCartRomInit]
-    #  - [0xAA670, data, osAiSetNextBuffer]
-    #  - [0xAA770, data, init_lpfilter]
-    #  - [0xAA810, data, alEnvmixerPull]
-    #  - [0xAA940, data, osContInit]
-    #  - [0xAA950, data, __sinf]
-    #  - [0xAB150, data, osSendMesg]
-    #  - [0xAB160, data, osCreateScheduler]
-    #  - [0xAB170, data, __osSiCreateAccessQueue]
-    #  - [0xAB180, data, osCreateMesgQueue]
-    #  - [0xAB190, data, osJamMesg]
-    #  - [0xAB1A0, data, osSetTimer]
-    #  - [0xAB1B0, data, osCreateViManager]
-    #  #Gap?
-    #  - [0xAC350, data, __osSumcalc]
-    #  - [0xAC360, data, __osContRamRead]
-    #  - [0xAC370, data, createSpeedParam]
-    #  - [0xAC410, data, __osViInit]
-    #  - [0xAC570, data, _Litob]
-    #  - [0xAC5A0, bin, F3DEX] # RSP Gfx ucode F3DEX
-    #  - [0xAC9D0, bin, RSP_F3DEX_ucode]
-    #  - [0xACDF0, bin, RSP_L3DEX_ucode]
-      ##### RODATA START ####
-      - [0xAD060, bin, rodata] 
-   #  - [0xAD060, rodata, codeseg1/code_3] 
-   #  - [0xAD110, rodata, codeseg1/code_11]
-   #  - [0xAD150, rodata, codeseg1/code_19]
-   #  - [0xAD190, rodata, codeseg1/code_22]
-   #  - [0xAD1F0, rodata, codeseg1/code_23]
-   #  - [0xAD210, rodata, codeseg1/code_28]
-   #  - [0xAD840, rodata, codeseg1/code_37]
-   #  - [0xADB00, rodata, codeseg1/code_40]
-   #  - [0xADBF0, rodata, codeseg1/code_45]
-   #  - [0xADDB0, rodata, codeseg1/code_46_1]
-   #  - [0xADDE0, rodata, codeseg1/code_50]
-   #  - [0xADF40, rodata, codeseg1/code_53]
-   #  - [0xADFD0, rodata, codeseg1/code_54]
-   #  - [0xAE030, rodata, codeseg1/code_59]
-   #  - [0xAE070, rodata, codeseg1/code_64]
-   #  - [0xAE0A0, rodata, codeseg1/code_67]
-   #  - [0xAE110, rodata, codeseg1/code_78]
-   #  - [0xAE200, rodata, codeseg1/code_83]
-   #  - [0xAE2A0, rodata, codeseg1/code_85]
-   #  - [0xAE2B0, rodata, codeseg1/code_86]
-   #  - [0xAE2F0, rodata, codeseg1/code_96]
-   #  - [0xAE390, rodata, __osDevMgrMain]
-   #  - [0xAE3B0, rodata, osAiGetLength]
-   ##  - [0xAE3C0, rodata, osAiSetNextBuffer]
-   #  - [0xAE3C0, rodata, init_lpfilter]
-   #  - [0xAE400, rodata, alEnvmixerPull]
-   #  - [0xAE4F0, rodata, alMainBusPull]
-   #  - [0xAE520, rodata, alFxPull]
-   #  - [0xAE590, rodata, __cosf]
-   #  - [0xAE5F0, rodata, __sinf]
-   #  - [0xAE650, rodata, osCreateScheduler]
-   #  - [0xAE670, rodata, __osViSwapContext]
-   #  - [0xAE680, rodata, __osExceptionPreamble]
-   #  - [0xAE6D0, rodata, libm] # Calls from COSF and SINF
-   #  - [0xAE6E0, rodata, _bcmp]
-   #  - [0xAE860, rodata, _Ldtob]
-      - { start: 0xAE8D0, type: bss, vram: 0x800D34D0 }
+
+      # Data
+      - [0x82090, bin, codeseg1/code_1]
+      - [0x820B0, bin, f3dex2_data]
+      - [0x82340, data, codeseg1/code_11]
+      - [0x83B20, data, codeseg1/code_12]
+      - [0x83C10, data, codeseg1/code_15]
+      - [0x83C60, data, codeseg1/code_16]
+      - [0x841A0, data, codeseg1/code_19]
+      - [0x87B50, data, codeseg1/code_20]
+      - [0x87CF0, data, codeseg1/code_22]
+      - [0x87D50, data, codeseg1/code_23]
+      - [0x87D60, data, codeseg1/code_25]
+      - [0x87D80, data, codeseg1/code_26]
+      - [0x87DE0, data, codeseg1/code_28]
+      - [0x87E10, data, codeseg1/code_29]
+      - [0x87EB0, data, codeseg1/code_31]
+      - [0x89950, data, codeseg1/code_37]
+      - [0x89D30, data, codeseg1/code_39]
+      - [0x8A050, data, codeseg1/code_40]
+      - [0x8B8D0, data, codeseg1/cutscene]
+      - [0x8B8F0, data, codeseg1/code_43]
+      - [0x8BB50, data, codeseg1/code_44]
+      - [0x98680, data, codeseg1/code_60]
+      - [0x98690, data, codeseg1/code_61]
+      - [0x986E0, data, codeseg1/code_62]
+      - [0x986F0, data, codeseg1/code_63]
+      - [0x98740, data, codeseg1/code_64]
+      - [0x99370, data, codeseg1/code_65]
+      - [0xA1670, data, codeseg1/code_66]
+      - [0xA9C50, data, codeseg1/code_67]
+      - [0xA9D20, data, codeseg1/code_69]
+      - [0xA9DA0, data, codeseg1/code_70]
+      - [0xA9E00, data, codeseg1/code_71]
+      - [0xA9E30, data, codeseg1/code_72]
+      - [0xA9F30, data, codeseg1/code_75]
+      - [0xA9F50, data, codeseg1/code_76]
+      - [0xA9F70, data, MusStartSong]
+      - [0xAA030, data, Fchangefx]
+      - [0xAA240, data, codeseg1/code_81]
+      # - [0xAA270, data, codeseg1/code_83]
+      - [0xAA270, data, n_alFxNew]
+      - [0xAA400, data, n_alEnvmixerPull]
+      - [0xAA510, data, codeseg1/code_95]
+      - [0xAA520, data, codeseg1/code_99]
+      - [0xAA540, data, codeseg1/code_101]
+      - [0xAA550, data, codeseg1/code_102]
+      - [0xAA570, data, codeseg1/code_113]
+      - [0xAA5B0, data, codeseg1/code_114]
+      - [0xAA5E0, data, codeseg1/code_116]
+      - [0xAA5F0, data, codeseg1/code_118]
+      - [0xAA620, .data, libultra/io/pimgr]
+      - [0xAA650, .data, libultra/io/cartrominit]
+      # - [0xAA660, .data, libultra/io/piacs]
+      - [0xAA670, .data, libultra/io/aisetnextbuf]
+      - [0xAA680, .data, libultra/audio/drvrnew]
+      - [0xAA810, .data, libultra/audio/env]
+      - [0xAA940, .data, libultra/io/controller]
+      - [0xAA950, .data, libultra/gu/sins]
+      - [0xAB150, .data, libultra/os/seteventmesg]
+      - [0xAB160, .data, libultra/sched/sched]
+      - [0xAB170, .data, libultra/io/siacs]
+      - [0xAB180, .data, libultra/os/thread]
+      - [0xAB190, .data, libultra/os/jammesg]
+      - [0xAB1A0, .data, libultra/os/timerintr]
+      - [0xAB1B0, .data, libultra/io/vimgr]
+      - [0xAB1D0, data]
+      - [0xAC350, .data, libultra/io/contpfs]
+      - [0xAC360, .data, libultra/io/contramread]
+      - [0xAC370, .data, libultra/os/initialize]
+      - [0xAC380, .data, libultra/os/setglobalintmask]
+      - [0xAC390, data, libultra/os/exceptasm]
+      - [0xAC410, .data, libultra/io/vi]
+      - [0xAC480, .data, libultra/vimodes/vimodentsclan1]
+      - [0xAC4D0, .data, libultra/vimodes/vimodepallan1]
+      - [0xAC520, .data, libultra/vimodes/vimodempallan1]
+      - [0xAC570, data, libultra/libc/xlitob]
+      - [0xAC5A0, bin, F3DEX]
+      - [0xAC9D0, bin, RSP_F3DEX_ucode]
+      - [0xACDF0, bin, RSP_L3DEX_ucode]
+
+      # Rodata
+      - [0xAD060, rodata, codeseg1/code_3] 
+      - [0xAD110, rodata, codeseg1/code_11]
+      - [0xAD150, rodata, codeseg1/code_19]
+      - [0xAD190, rodata, codeseg1/code_22]
+      - [0xAD1F0, rodata, codeseg1/code_23]
+      - [0xAD210, rodata, codeseg1/code_28]
+      - [0xAD840, rodata, codeseg1/code_37]
+      - [0xADB00, rodata, codeseg1/code_40]
+      - [0xADBF0, rodata, codeseg1/code_45]
+      - [0xADDB0, rodata, codeseg1/code_46_1]
+      - [0xADDE0, rodata, codeseg1/code_50]
+      - [0xADF40, rodata, codeseg1/code_53]
+      - [0xADFD0, rodata, codeseg1/code_54]
+      - [0xAE030, rodata, codeseg1/code_59]
+      - [0xAE070, rodata, codeseg1/code_64]
+      - [0xAE0A0, rodata, codeseg1/code_67]
+      - [0xAE110, rodata, codeseg1/code_78]
+      - [0xAE200, rodata, codeseg1/code_83]
+      - [0xAE2A0, rodata, codeseg1/code_85]
+      - [0xAE2B0, rodata, codeseg1/code_86]
+      - [0xAE2F0, rodata, codeseg1/code_96]
+      - [0xAE310, rodata, libultra/os/setintmask]
+      - [0xAE390, .rodata, libultra/io/devmgr]
+      - [0xAE3B0, .rodata, libultra/io/aisetfreq]
+      - [0xAE3C0, .rodata, libultra/audio/drvrnew]
+      - [0xAE400, .rodata, libultra/audio/env]
+      - [0xAE4F0, .rodata, libultra/audio/resample]
+      - [0xAE520, .rodata, libultra/audio/reverb]
+      - [0xAE590, .rodata, libultra/gu/cosf]
+      - [0xAE5F0, .rodata, libultra/gu/sinf]
+      - [0xAE650, .rodata, libultra/sched/sched]
+      - [0xAE670, .rodata, libultra/io/viswapcontext]
+      - [0xAE680, rodata, libultra/os/exceptasm]
+      # - [0xAE6D0, rodata, libm]
+      - [0xAE6E0, rodata, libultra/libc/xprintf]
+      - [0xAE860, rodata, libultra/libc/xldtob]
+      - { start: 0xAE8D0, type: bss, vram: 0x800D34D0, name: undefinedBSS }
+      - {  type: .bss, vram: 0x801916D0, name: libultra/io/pimgr}
+      # - {  type: .bss, vram: 0x801928A0, name: libultra/io/siacs }
+      - {  type: .bss, vram: 0x801928B0, name: libultra/io/sptask }
+      - {  type: .bss, vram: 0x80192900, name: libultra/io/vimgr }
+      - {  type: .bss, vram: 0x80193B20, name: libultra/io/motor }
+      - {  type: bss, vram: 0x80193C20, name: commonBSS}
       
-    # Not Truely an overlay? Only allocated once. Might be a 'Fragment'
+  # Not Truely an overlay? Only allocated once
   - name: ovl1
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -474,7 +499,6 @@ segments:
   - name: ovl2 #Intro Dungeon
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -518,7 +542,6 @@ segments:
   - name: ovl3
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -561,7 +584,6 @@ segments:
   - name: ovl4 #Underground Ruins
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -598,7 +620,6 @@ segments:
   - name: ovl5
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -655,7 +676,6 @@ segments:
   - name: ovl6
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -679,7 +699,6 @@ segments:
   - name: ovl7 #Cardon Forest
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -716,7 +735,6 @@ segments:
   - name: ovl_intro
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -733,7 +751,6 @@ segments:
   - name: ovl_market
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -763,7 +780,6 @@ segments:
   - name: ovl10
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -813,7 +829,6 @@ segments:
   - name: ovl11
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -840,7 +855,6 @@ segments:
   - name: ovl12
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -871,7 +885,6 @@ segments:
   - name: ovl13
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -906,7 +919,6 @@ segments:
   - name: ovl14
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -930,7 +942,6 @@ segments:
   - name: ovl15
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -960,7 +971,6 @@ segments:
   - name: ovl16
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -994,7 +1004,6 @@ segments:
   - name: ovl17
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1009,7 +1018,6 @@ segments:
   - name: ovl18
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1041,7 +1049,6 @@ segments:
   - name: ovl19
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1065,7 +1072,6 @@ segments:
   - name: ovl20
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1087,7 +1093,6 @@ segments:
   - name: ovl21
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1127,7 +1132,6 @@ segments:
   - name: ovl22
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1163,7 +1167,6 @@ segments:
   - name: ovl23
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1182,7 +1185,6 @@ segments:
   - name: ovl24
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1201,7 +1203,6 @@ segments:
   - name: ovl25
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1251,7 +1252,6 @@ segments:
   - name: ovl26
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1270,7 +1270,6 @@ segments:
   - name: ovl27
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1304,7 +1303,6 @@ segments:
   - name: ovl28
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1359,7 +1357,6 @@ segments:
   - name: ovl29
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1392,7 +1389,6 @@ segments:
   - name: ovl30
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1409,7 +1405,6 @@ segments:
   - name: ovl31
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1438,7 +1433,6 @@ segments:
   - name: ovl32
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1459,7 +1453,6 @@ segments:
   - name: ovl33
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1474,7 +1467,6 @@ segments:
   - name: ovl34
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1488,7 +1480,6 @@ segments:
   - name: ovl35
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1504,7 +1495,6 @@ segments:
   - name: ovl36
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1519,7 +1509,6 @@ segments:
   - name: ovl37
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1534,7 +1523,6 @@ segments:
   - name: ovl38
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1549,7 +1537,6 @@ segments:
   - name: ovl39
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1564,7 +1551,6 @@ segments:
   - name: ovl40
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1579,7 +1565,6 @@ segments:
   - name: ovl41
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1594,7 +1579,6 @@ segments:
   - name: ovl42
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1609,7 +1593,6 @@ segments:
   - name: ovl43
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
@@ -1624,7 +1607,6 @@ segments:
   - name: ovl44
     overlay: True
     dir: overlays
-    overlay: True
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code

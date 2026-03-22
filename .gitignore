@@ -1,3 +1,7 @@
+.idea
+.venv
+venv
+__pycache__
 baserom.us.z64
 megaman64.l
 megaman64.ld
@@ -6,9 +10,7 @@ assets
 asm
 bin
 build
-tools/undefined_syms_auto.txt
-tools/undefined_funcs_auto.txt
+undefined_syms_auto.txt
+undefined_funcs_auto.txt
 tools/gcc_kmc/
-research
-venv
-.venv
+ctx.c
