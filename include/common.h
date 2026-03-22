@@ -7,4 +7,8 @@
 #include "ld_addrs.h"
 #include "macros.h"
 
+#define true 1
+#define false 0
+#define bool s32
+
 #endif
