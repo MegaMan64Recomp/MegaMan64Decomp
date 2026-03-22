@@ -6,48 +6,60 @@ options:
   elf_path: build/megaman64.elf
   base_path: .
   platform: n64
-  compiler: GCC
+  compiler: KMC
   find_file_boundaries: True
   header_encoding: ASCII
   
-  asm_path: asm
-  src_path: src
-  asset_path: bin
+  # asm_path: asm
+  # src_path: src
+  # asset_path: bin
   build_path: build
   # create_asm_dependencies: True
   #symbol_name_format: $VRAM_$ROM
 
   ld_script_path: megaman64.ld
-  
+  ld_dependencies: True
+  ld_symbol_header_path: include/ld_addrs.h
 
-  #asm_function_macro: glabel
-  #asm_jtbl_label_macro: jlabel
-  #asm_data_macro: dlabel
-  
-  create_undefined_funcs_auto: true
-  create_undefined_syms_auto: true
-  
-  symbol_addrs_path:
-    - symbols.txt
-  #reloc_addrs_path:
-  #  - relocs.txt
-  #reloc_addrs_path:
-  #  - reloc_addrs.txt
+  #o_as_suffix: True
+  use_legacy_include_asm: False
   create_asm_dependencies: True
   detect_redundant_function_end: False
+  mips_abi_float_regs: o32 #something isn't set up correctly for this...unsure what
+
+  asm_function_macro: glabel
+  asm_jtbl_label_macro: jlabel
+  asm_data_macro: dlabel
+
+  # section_order: [".text", ".data", ".rodata", ".bss"]
+  # auto_link_sections: [".data", ".rodata", ".bss"]
+
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  # reloc_addrs_path:
+  #   - reloc_addrs.txt
+
+  # undefined_funcs_auto_path: undefined_funcs_auto.txt
+  # undefined_syms_auto_path: undefined_syms_auto.txt
+
+  extensions_path: tools/splat_ext
 
   # string_encoding: ASCII
   # data_string_encoding: ASCII
-  rodata_string_guesser_level: 3
-  data_string_guesser_level: 3
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
   # libultra_symbols: True
   # hardware_regs: True
   # gfx_ucode: # one of [f3d, f3db, f3dex, f3dexb, f3dex2]
-  #gfx_ucode: f3dex2
   
 segments:
-  - [0x000000, bin, header]
-  - [0x000040, bin, boot]
+  - name: header
+    type: header
+    start: 0x0
+
+  - name: boot
+    type: bin
+    start: 0x40
   
   - name: main
     find_file_boundaries: false
