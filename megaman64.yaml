@@ -156,18 +156,22 @@ segments:
       - [0x62FC0, asm, codeseg1/code_72]
       - [0x646B0, asm, codeseg1/code_73]
       - [0x650D0, asm, codeseg1/code_74]
-      #LibMus
       - [0x652A0, asm, codeseg1/code_75]
       - [0x65510, asm, codeseg1/code_76]
       - [0x65790, asm, codeseg1/code_77]
-      - [0x657D0, asm, codeseg1/code_78] 
-    #  - [0x666E0, asm, MusFxBankNumberOfEffects]
-    #  - [0x676F0, asm, MusIntInitSweep]
-      - [0x698A0, asm, codeseg1/code_79]
-      - [0x69D00, asm, codeseg1/code_80]
-      - [0x69EB0, asm, codeseg1/code_81]
-      - [0x6A170, asm, codeseg1/code_82]
-      #End of LibMus
+
+      #LibMus
+      - [0x657D0, asm, libmus/player_api] 
+      - [0x66810, asm, libmus/player_fifo]
+      - [0x6698C, asm, libmus/player]
+      - [0x6866C, asm, libmus/player_commands]
+      - [0x69050, asm, libmus/player_fx]
+      - [0x698A0, asm, libmus/aud_dma]
+      - [0x69D00, asm, libmus/aud_sched]
+      - [0x69EB0, asm, libmus/aud_thread]
+      - [0x6A170, asm, libmus/aud_mem]
+
+      #N_libaudio?
       - [0x6A3E0, asm, codeseg1/code_83]
     #  - [0x6A9A0, asm, n_alEnvmixerPull
       - [0x6B370, asm, codeseg1/code_84]
@@ -474,6 +478,7 @@ segments:
       - [0xAE6E0, rodata, libultra/libc/xprintf]
       - [0xAE860, rodata, libultra/libc/xldtob]
       - { start: 0xAE8D0, type: bss, vram: 0x800D34D0, name: undefinedBSS }
+      # - {  type: .bss, vram: 0x80184F70, name: libmus/player}
       - {  type: .bss, vram: 0x801916D0, name: libultra/io/pimgr}
       # - {  type: .bss, vram: 0x801928A0, name: libultra/io/siacs }
       - {  type: .bss, vram: 0x801928B0, name: libultra/io/sptask }
