@@ -87,7 +87,7 @@ ENDLINE := \n'
 
 ASFLAGS        := -G 0 -I include -mips3 -mabi=32
 CFLAGS         := -G0 -mips3 -mgp32 -mfp32 -D_LANGUAGE_C -D_FINALROM=0 -DNDEBUG
-CPPFLAGS       := -I include -I $(BUILD_DIR)/include -I src -I include/PR -DF3DEX_GBI_2 -D_LANGUAGE_C -D_MIPS_SZLONG=32
+CPPFLAGS       := -I include -I $(BUILD_DIR)/include -I src -I $(LIBULTRA_DIR)/include -DF3DEX_GBI_2 -D_LANGUAGE_C -D_MIPS_SZLONG=32
 LDFLAGS        := -T undefined_syms.txt -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T $(LD_SCRIPT) -Map $(LD_MAP) --no-check-sections
 CHECK_WARNINGS := -Wall -Wextra -Wunused-but-set-variable -Wno-format-security -Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast -m32
 CFLAGS_CHECK   := -fcommon -fsyntax-only -fsigned-char -nostdinc -fno-builtin -D CC_CHECK -D _LANGUAGE_C -std=gnu90 $(CHECK_WARNINGS)
@@ -111,9 +111,11 @@ OBJECTS := $(OBJECTS:build/%=$(BUILD_DIR)/%)
 DEPENDS := $(OBJECTS:=.d) 
 
 ### Targets ###
+$(BUILD_DIR)/$(LIBULTRA_DIR)/src/%.o: OPTFLAGS := -O3 -g0
+$(BUILD_DIR)/$(LIBULTRA_DIR)/src/%.o: CPPFLAGS += -I $(LIBULTRA_DIR)/src -I $(LIBULTRA_DIR)/include/PR -I $(LIBULTRA_DIR)/include/libc
 
 $(BUILD_DIR)/$(LIBMUS_DIR)/src/%.o: OPTFLAGS := -O3 -G0
-$(BUILD_DIR)/$(LIBMUS_DIR)/src/%.o: CFLAGS += -I $(LIBULTRA_DIR)/include/2.0I/PR -I $(LIBMUS_DIR)/include -DSUPPORT_NAUDIO -DSUPPORT_FXCHANGE
+$(BUILD_DIR)/$(LIBMUS_DIR)/src/%.o: CPPFLAGS += -I $(LIBULTRA_DIR)/include/PR -I $(LIBMUS_DIR)/include -DSUPPORT_NAUDIO
 
 all: $(ROM)
 
@@ -148,7 +150,7 @@ $(BUILD_DIR)/%.c.o: %.c
 	$(V)export COMPILER_PATH=tools/gcc_kmc/$(DETECTED_OS)/2.7.2 && $(CC) $(OPTFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # Assemble .s files with modern gnu as
-$(BUILD_DIR)/asm/%.s.o: asm/%.s
+$(BUILD_DIR)/%.s.o: %.s
 	@$(PRINT)$(GREEN)Assembling asm file: $(ENDGREEN)$(BLUE)$<$(ENDBLUE)$(ENDLINE)
 	@mkdir -p $(shell dirname $@)
 	$(V)$(AS) $(ASFLAGS) -o $@ $<

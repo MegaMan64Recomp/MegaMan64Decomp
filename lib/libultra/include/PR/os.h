@@ -50,7 +50,7 @@
 // #include <PR/os_reg.h>
 #include <PR/os_system.h>
 #include <PR/os_eeprom.h>
-// #include <PR/os_flash.h>
+#include <PR/os_flash.h>
 // #include <PR/os_host.h>
 #include <PR/os_convert.h>
 #include <PR/os_rdp.h>
