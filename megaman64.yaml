@@ -7,8 +7,8 @@ options:
   base_path: .
   platform: n64
   compiler: KMC
-  header_encoding: ASCII
-  
+  header_encoding: ASCII 
+
   # asm_path: asm
   # src_path: src
   # asset_path: bin
@@ -156,50 +156,56 @@ segments:
       - [0x62FC0, asm, codeseg1/code_72]
       - [0x646B0, asm, codeseg1/code_73]
       - [0x650D0, asm, codeseg1/code_74]
-      #LibMus
       - [0x652A0, asm, codeseg1/code_75]
       - [0x65510, asm, codeseg1/code_76]
       - [0x65790, asm, codeseg1/code_77]
-      - [0x657D0, asm, codeseg1/code_78] 
-    #  - [0x666E0, asm, MusFxBankNumberOfEffects]
-    #  - [0x676F0, asm, MusIntInitSweep]
-      - [0x698A0, asm, codeseg1/code_79]
-      - [0x69D00, asm, codeseg1/code_80]
-      - [0x69EB0, asm, codeseg1/code_81]
-      - [0x6A170, asm, codeseg1/code_82]
-      #End of LibMus
-      - [0x6A3E0, asm, codeseg1/code_83]
-    #  - [0x6A9A0, asm, n_alEnvmixerPull
-      - [0x6B370, asm, codeseg1/code_84]
-      - [0x6BA90, asm, codeseg1/code_85]
-      - [0x6BC70, asm, codeseg1/code_86]
-    #  - [0x6C170, asm, n_loadOutputBuffer]
-      - [0x6C660, asm, n_alInit]
-      - [0x6C6E0, asm, codeseg1/code_88]
-      - [0x6C730, asm, codeseg1/code_89]
-      - [0x6C910, asm, codeseg1/code_90]
-      - [0x6C9C0, asm, codeseg1/code_91]
-      - [0x6CA50, asm, codeseg1/code_92]
-      - [0x6CAE0, asm, codeseg1/code_93]
-      - [0x6CB90, asm, codeseg1/code_94]
-      - [0x6CC20, asm, codeseg1/code_95]
-      - [0x6CCA0, asm, codeseg1/code_96]
-      - [0x6D200, asm, codeseg1/code_97]
-      - [0x6D250, asm, codeseg1/code_98]
-      - [0x6D320, asm, codeseg1/code_99]
-      - [0x6DC60, asm, codeseg1/code_100]
-      - [0x6DCA0, asm, codeseg1/code_101]
-      - [0x6DDD0, asm, codeseg1/code_102]
-      - [0x6E210, asm, codeseg1/code_103]
-      - [0x6E250, asm, codeseg1/code_104]
-      - [0x6E290, asm, codeseg1/code_105]
-      - [0x6E2B0, asm, codeseg1/code_106]
-      - [0x6E2D0, asm, codeseg1/code_107]
-      - [0x6E350, asm, codeseg1/code_108]
-      - [0x6E460, asm, codeseg1/code_109]
-      - [0x6E490, asm, codeseg1/code_110]
+
+      #LibMus
+      - [0x657D0, c, ../lib/libmus/src/player]
+      - [0x69050, c, ../lib/libmus/src/player_fx]
+      - [0x698A0, c, ../lib/libmus/src/aud_dma]
+      - [0x69D00, c, ../lib/libmus/src/aud_sched]
+      - [0x69EB0, c, ../lib/libmus/src/aud_thread]
+      - [0x6A170, c, ../lib/libmus/src/lib_memory]
+      - [0x6A2B0, c, ../lib/libmus/src/aud_samples]
+
+      #N_libaudio
+      - [0x6A3E0, asm, libn_audio/n_auxbus]
+      - [0x6A480, asm, libn_audio/n_drvrNew]
+      - [0x6A9A0, asm, libn_audio/n_env]
+      - [0x6B370, asm, libn_audio/n_load]
+      - [0x6BA90, asm, libn_audio/n_resample]
+      - [0x6BC70, asm, libn_audio/n_reverb]
+      - [0x6C660, asm, libn_audio/n_sl]
+      - [0x6C6E0, asm, libn_audio/n_synaddplayer]
+      - [0x6C730, asm, libn_audio/n_synallocvoice]
+      - [0x6C910, asm, libn_audio/n_syndelete]
+      - [0x6C920, asm, libn_audio/n_synsetfxmix]
+      - [0x6C9C0, asm, libn_audio/n_synsetpan]
+      - [0x6CA50, asm, libn_audio/n_synsetpitch]
+      - [0x6CAE0, asm, libn_audio/n_synsetvol]
+      - [0x6CB90, asm, libn_audio/n_synstartvoice]
+      - [0x6CC20, asm, libn_audio/n_synstopvoice]
+      - [0x6CCA0, asm, libn_audio/n_synthesizer]
+      - [0x6D200, asm, libn_audio/n_save]
+      - [0x6D250, asm, libn_audio/n_synallocfx]
+      - [0x6D2A0, asm, libn_audio/n_mainbus]
+
+      # nusys
+      - [0x6D320, asm, codeseg2/code_99]
+      - [0x6DC60, asm, codeseg2/code_100]
+      - [0x6DCA0, asm, codeseg2/code_101]
+      - [0x6DDD0, asm, codeseg2/code_102]
+      - [0x6E210, asm, codeseg2/code_103]
+      - [0x6E250, asm, codeseg2/code_104]
+      - [0x6E290, asm, codeseg2/code_105]
+      - [0x6E2B0, asm, codeseg2/code_106]
+      - [0x6E2D0, asm, codeseg2/code_107]
+      - [0x6E350, asm, codeseg2/code_108]
+      - [0x6E460, asm, codeseg2/code_109]
+      - [0x6E490, asm, codeseg2/code_110]
       - [0x6E4A0, asm, settime] #manual implementation of osSetTime?
-      - [0x6E4C0, asm, codeseg1/code_112]
+      - [0x6E4C0, asm, codeseg2/code_112]
 
       # Libultra
       - [0x6F860, hasm, libultra/os/setintmask]
@@ -351,10 +357,11 @@ segments:
       - [0x7E580, c, libultra/io/dp]
       - [0x7E5A0, c, libultra/io/si]
       - [0x7E5C0, asm, libultra/libc/ldiv]
-      - [0x7EE40, bin, rspboot_code]
-      - [0x7EF10, bin, n_aspMain_code]
-      - [0x7FB70, bin, f3dex2]
-      - [0x80F00, bin, l3dex2]
+      
+      - [0x7EE40, textbin, rspboot]
+      - [0x7EF10, textbin, aspMain]
+      - [0x7FB70, textbin, f3dex2]
+      - [0x80F00, textbin, l3dex2]
 
       # Data
       - [0x82090, bin, codeseg1/code_1]
@@ -392,16 +399,15 @@ segments:
       - [0xA9E30, data, codeseg1/code_72]
       - [0xA9F30, data, codeseg1/code_75]
       - [0xA9F50, data, codeseg1/code_76]
-      - [0xA9F70, data, MusStartSong]
-      - [0xAA030, data, Fchangefx]
-      - [0xAA240, data, codeseg1/code_81]
-      # - [0xAA270, data, codeseg1/code_83]
+      - [0xA9F70, .data, ../lib/libmus/src/player]
       - [0xAA270, data, n_alFxNew]
       - [0xAA400, data, n_alEnvmixerPull]
       - [0xAA510, data, codeseg1/code_95]
-      - [0xAA520, data, codeseg1/code_99]
-      - [0xAA540, data, codeseg1/code_101]
-      - [0xAA550, data, codeseg1/code_102]
+
+      - [0xAA520, data, codeseg2/code_99]
+      - [0xAA540, data, codeseg2/code_101]
+      - [0xAA550, data, codeseg2/code_102]
+
       - [0xAA570, data, codeseg1/code_113]
       - [0xAA5B0, data, codeseg1/code_114]
       - [0xAA5E0, data, codeseg1/code_116]
@@ -453,11 +459,11 @@ segments:
       - [0xAE030, rodata, codeseg1/code_59]
       - [0xAE070, rodata, codeseg1/code_64]
       - [0xAE0A0, rodata, codeseg1/code_67]
-      - [0xAE110, rodata, codeseg1/code_78]
-      - [0xAE200, rodata, codeseg1/code_83]
-      - [0xAE2A0, rodata, codeseg1/code_85]
-      - [0xAE2B0, rodata, codeseg1/code_86]
-      - [0xAE2F0, rodata, codeseg1/code_96]
+      - [0xAE110, .rodata, ../lib/libmus/src/player]
+      - [0xAE200, rodata, libn_audio/n_drvrNew]
+      - [0xAE2A0, rodata, libn_audio/n_resample]
+      - [0xAE2B0, rodata, libn_audio/n_reverb]
+      - [0xAE2F0, rodata, libn_audio/n_synthesizer]
       - [0xAE310, rodata, libultra/os/setintmask]
       - [0xAE390, .rodata, libultra/io/devmgr]
       - [0xAE3B0, .rodata, libultra/io/aisetfreq]
@@ -474,6 +480,17 @@ segments:
       - [0xAE6E0, rodata, libultra/libc/xprintf]
       - [0xAE860, rodata, libultra/libc/xldtob]
       - { start: 0xAE8D0, type: bss, vram: 0x800D34D0, name: undefinedBSS }
+      - {  type: .bss, vram: 0x80184F70, name: ../lib/libmus/src/player}
+      - {  type: .bss, vram: 0x80184FE0, name: ../lib/libmus/src/aud_dma}
+      - {  type: .bss, vram: 0x80185020, name: ../lib/libmus/src/aud_sched}
+      - {  type: .bss, vram: 0x80185030, name: ../lib/libmus/src/aud_thread}
+      - {  type: .bss, vram: 0x801851F0, name: ../lib/libmus/src/lib_memory}
+      - {  type: .bss, vram: 0x80185200, name: ../lib/libmus/src/aud_samples}
+      - {  type: bss, vram: 0x80185210, name: undefinedBSS2 }
+      - {  type: bss, vram: 0x80187210, name: codeseg2/code_99}
+      - {  type: bss, vram: 0x8018B210, name: codeseg2/code_101}
+      - {  type: bss, vram: 0x8018D230, name: codeseg2/code_102}
+      - {  type: bss, vram: 0x8018F410, name: codeseg2/code_112}
       - {  type: .bss, vram: 0x801916D0, name: libultra/io/pimgr}
       # - {  type: .bss, vram: 0x801928A0, name: libultra/io/siacs }
       - {  type: .bss, vram: 0x801928B0, name: libultra/io/sptask }

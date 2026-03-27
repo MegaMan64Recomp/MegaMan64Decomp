@@ -40,6 +40,8 @@ endif
 ### Output ###
 
 BUILD_DIR := build
+LIBULTRA_DIR := lib/libultra
+LIBMUS_DIR   := lib/libmus
 ROM       := $(BUILD_DIR)/$(TARGET).z64
 ELF       := $(BUILD_DIR)/$(TARGET).elf
 LD_SCRIPT := $(TARGET).ld
@@ -54,8 +56,6 @@ SPLAT_YAML	:= megaman64.yaml
 MOD_YAML	:= megaman64_mod.yaml
 SPLAT	:= $(PYTHON) -m splat split $(SPLAT_YAML)
 MOD_SPLAT	:= $(PYTHON) -m splat split $(MOD_YAML)
-MOD_LINKER_INJECT := $(PYTHON) ./tools/append_mod_to_linker_script.py
-MOD_OVL_TABLE_INJECT := $(PYTHON) ./tools/gen_new_overlay_table_file.py
 EMULATOR   := mupen64plus
 DIFF       := diff
 
@@ -106,12 +106,18 @@ OPTFLAGS := -O3
 ### Sources ###
 
 # Object files
-OBJECTS := $(shell grep -E 'build.+\.o' megaman64.ld -o)
+OBJECTS := $(shell grep -E 'build.+\.o' $(LD_SCRIPT) -o)
+OBJECTS := $(OBJECTS:build/%=$(BUILD_DIR)/%)
 DEPENDS := $(OBJECTS:=.d) 
 
 ### Targets ###
 
+$(BUILD_DIR)/$(LIBMUS_DIR)/src/%.o: OPTFLAGS := -O3 -G0
+$(BUILD_DIR)/$(LIBMUS_DIR)/src/%.o: CFLAGS += -I $(LIBULTRA_DIR)/include/2.0I/PR -I $(LIBMUS_DIR)/include -DSUPPORT_NAUDIO -DSUPPORT_FXCHANGE
+
 all: $(ROM)
+
+objects: $(OBJECTS)
 
 -include $(DEPENDS)
 
@@ -127,14 +133,6 @@ distclean: clean
 
 setup: distclean split
 
-modsetup: distclean modsplit
-
-modsplit:
-	$(V)rm -rf asm
-	$(V)$(MOD_OVL_TABLE_INJECT)
-	$(V)$(MOD_SPLAT)
-	$(V)$(MOD_LINKER_INJECT)
-
 split:
 	$(V)rm -rf asm
 	$(V)$(SPLAT)
@@ -142,13 +140,12 @@ split:
 test: $(ROM)
 	$(V)$(EMULATOR) $<
 
-# Compile .c files with kmc gcc (use strip to fix objects so that they can be linked with modern gnu ld) 
-$(BUILD_DIR)/src/%.c.o: src/%.c
+# Compile .c files with kmc gcc
+$(BUILD_DIR)/%.c.o: %.c
 	@$(PRINT)$(GREEN)Compiling C file: $(ENDGREEN)$(BLUE)$<$(ENDBLUE)$(ENDLINE)
 	@mkdir -p $(shell dirname $@)
 	@$(CC_HOST) $(CFLAGS_CHECK) $(CPPFLAGS) -MMD -MP -MT $@ -MF $@.d $<
 	$(V)export COMPILER_PATH=tools/gcc_kmc/$(DETECTED_OS)/2.7.2 && $(CC) $(OPTFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-	@$(STRIP) $@ -N dummy-symbol-name
 
 # Assemble .s files with modern gnu as
 $(BUILD_DIR)/asm/%.s.o: asm/%.s
@@ -162,8 +159,12 @@ $(BUILD_DIR)/%.bin.o: %.bin
 	@mkdir -p $(shell dirname $@)
 	$(V)$(LD) -r -b binary -o $@ $<
 
+$(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
+	@$(PRINT)$(GREEN)Preprocessing linker script: $(ENDGREEN)$(BLUE)$<$(ENDBLUE)$(ENDLINE)
+	$(V)$(CPP) -P -DBUILD_PATH=$(BUILD_DIR) $< -o $@
+
 # Link the .o files into the .elf
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS)
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(BUILD_DIR)/$(LD_SCRIPT)
 	@$(PRINT)$(GREEN)Linking elf file: $(ENDGREEN)$(BLUE)$@$(ENDBLUE)$(ENDLINE)
 	$(V)$(LD) $(LDFLAGS) -o $@
 

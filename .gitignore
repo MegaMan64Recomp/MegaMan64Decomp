@@ -6,6 +6,7 @@ baserom.us.z64
 megaman64.l
 megaman64.ld
 *.d
+*.s
 assets
 asm
 bin
