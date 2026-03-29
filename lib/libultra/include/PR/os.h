@@ -41,8 +41,8 @@
 #include <PR/os_time.h>
 #include <PR/os_cont.h>
 #include <PR/os_pfs.h>
-// #include <PR/os_gbpak.h>
-// #include <PR/os_voice.h>
+#include <PR/os_gbpak.h>
+#include <PR/os_voice.h>
 // #include <PR/os_cache.h>
 #include <PR/os_debug.h>
 // #include <PR/os_error.h>

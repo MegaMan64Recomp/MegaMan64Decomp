@@ -42,6 +42,7 @@ endif
 BUILD_DIR := build
 LIBULTRA_DIR := lib/libultra
 LIBMUS_DIR   := lib/libmus
+NUSYS_DIR    := lib/nusys
 ROM       := $(BUILD_DIR)/$(TARGET).z64
 ELF       := $(BUILD_DIR)/$(TARGET).elf
 LD_SCRIPT := $(TARGET).ld
@@ -116,6 +117,9 @@ $(BUILD_DIR)/$(LIBULTRA_DIR)/src/%.o: CPPFLAGS += -I $(LIBULTRA_DIR)/src -I $(LI
 
 $(BUILD_DIR)/$(LIBMUS_DIR)/src/%.o: OPTFLAGS := -O3 -G0
 $(BUILD_DIR)/$(LIBMUS_DIR)/src/%.o: CPPFLAGS += -I $(LIBULTRA_DIR)/include/PR -I $(LIBMUS_DIR)/include -DSUPPORT_NAUDIO
+
+$(BUILD_DIR)/$(NUSYS_DIR)/src/%.o: OPTFLAGS := -O3 -G0
+$(BUILD_DIR)/$(NUSYS_DIR)/src/%.o: CPPFLAGS += -I $(LIBULTRA_DIR)/include/PR -I $(NUSYS_DIR)/include
 
 all: $(ROM)
 
