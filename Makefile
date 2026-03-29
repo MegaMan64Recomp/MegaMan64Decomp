@@ -52,7 +52,7 @@ LD_MAP    := $(BUILD_DIR)/$(TARGET).map
 
 ### Tools ###
 
-PYTHON		:= venv/bin/python
+PYTHON		:= python3
 N64CKSUM	:= $(PYTHON) tools/n64cksum.py
 SPLAT_YAML	:= megaman64.yaml
 MOD_YAML	:= megaman64_mod.yaml
