@@ -22,6 +22,8 @@ ifeq ($(VERBOSE),0)
 V := @
 endif
 
+MAKE = make
+
 ifeq ($(OS),Windows_NT)
   DETECTED_OS=windows
 else
@@ -142,6 +144,12 @@ split:
 test: $(ROM)
 	$(V)$(EMULATOR) $<
 
+init:
+	$(V)$(MAKE) clean
+	$(V)$(MAKE) distclean
+	$(V)$(MAKE) setup
+	$(V)$(MAKE) all
+
 # Compile .c files with kmc gcc
 $(BUILD_DIR)/%.c.o: %.c
 	@$(PRINT)$(GREEN)Compiling C file: $(ENDGREEN)$(BLUE)$<$(ENDBLUE)$(ENDLINE)
@@ -181,7 +189,7 @@ endif
 
 ### Make Settings ###
 
-.PHONY: all clean distclean test setup split
+.PHONY: all clean distclean test setup split init
 
 # Remove built-in implicit rules to improve performance
 MAKEFLAGS += --no-builtin-rules
