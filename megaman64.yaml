@@ -192,20 +192,35 @@ segments:
       - [0x6D2A0, asm, libn_audio/n_mainbus]
 
       # nusys
-      - [0x6D320, asm, codeseg2/code_99]
-      - [0x6DC60, asm, codeseg2/code_100]
-      - [0x6DCA0, asm, codeseg2/code_101]
-      - [0x6DDD0, asm, codeseg2/code_102]
-      - [0x6E210, asm, codeseg2/code_103]
-      - [0x6E250, asm, codeseg2/code_104]
-      - [0x6E290, asm, codeseg2/code_105]
-      - [0x6E2B0, asm, codeseg2/code_106]
-      - [0x6E2D0, asm, codeseg2/code_107]
-      - [0x6E350, asm, codeseg2/code_108]
-      - [0x6E460, asm, codeseg2/code_109]
-      - [0x6E490, asm, codeseg2/code_110]
-      - [0x6E4A0, asm, settime] #manual implementation of osSetTime?
-      - [0x6E4C0, asm, codeseg2/code_112]
+      - [0x6D320, c, ../lib/nusys/src/mainlib/nusched]
+      - [0x6DC60, c, ../lib/nusys/src/mainlib/nuprenmifuncset]
+      - [0x6DCA0, c, ../lib/nusys/src/mainlib/nugfxthread]
+      - [0x6DDD0, c, ../lib/nusys/src/mainlib/nugfxtaskmgr]
+      - [0x6E210, c, ../lib/nusys/src/mainlib/nugfxfuncset]
+      - [0x6E250, c, ../lib/nusys/src/mainlib/nugfxswapcfbfuncset]
+      - [0x6E290, c, ../lib/nusys/src/mainlib/nugfxswapcfb]
+      - [0x6E2B0, c, ../lib/nusys/src/mainlib/nugfxtaskallendwait]
+      - [0x6E2D0, c, ../lib/nusys/src/mainlib/nugfxretracewait]
+      - [0x6E350, c, ../lib/nusys/src/mainlib/nugfxsetcfb]
+      - [0x6E460, c, ../lib/nusys/src/mainlib/nugfxdisplayoff]
+      - [0x6E490, c, ../lib/nusys/src/mainlib/nugfxdisplayon]
+      - [0x6E4A0, c, ../lib/nusys/src/mainlib/nugfxsetucodefifo]
+      - [0x6E4C0, c, ../lib/nusys/src/mainlib/nupiinit]
+      - [0x6E500, c, ../lib/nusys/src/mainlib/nucontinit]
+      - [0x6E540, c, ../lib/nusys/src/mainlib/nucontdatagetexall]
+      - [0x6E5F0, c, ../lib/nusys/src/mainlib/nucontpakmgr]
+      - [0x6E860, c, ../lib/nusys/src/mainlib/nucontrmbmgr]
+      - [0x6EDC0, c, ../lib/nusys/src/mainlib/nucontrmbstart]
+      - [0x6EE20, c, ../lib/nusys/src/mainlib/nucontrmbcheck]
+      - [0x6EEB0, c, ../lib/nusys/src/mainlib/nucontrmbmodeset]
+      - [0x6EFB0, c, ../lib/nusys/src/mainlib/nucontrmbforcestop]
+      - [0x6EFD0, c, ../lib/nusys/src/mainlib/nucontrmbforcestopend]
+      - [0x6EFF0, c, ../lib/nusys/src/mainlib/nusimgr]
+      - [0x6F320, c, ../lib/nusys/src/mainlib/nusicallbackadd]
+      - [0x6F3C0, c, ../lib/nusys/src/mainlib/nusicallbackremove]
+      - [0x6F440, c, ../lib/nusys/src/mainlib/nucontmgr]
+      - [0x6F7E0, c, ../lib/nusys/src/mainlib/nucontdatalock]
+      - [0x6F840, c, ../lib/nusys/src/mainlib/nucontqueryread]
 
       # Libultra
       - [0x6F860, hasm, setintmask]
@@ -404,14 +419,14 @@ segments:
       - [0xAA400, data, n_alEnvmixerPull]
       - [0xAA510, data, codeseg1/code_95]
 
-      - [0xAA520, data, codeseg2/code_99]
-      - [0xAA540, data, codeseg2/code_101]
-      - [0xAA550, data, codeseg2/code_102]
+      - [0xAA520, .data, ../lib/nusys/src/mainlib/nusched]
+      - [0xAA540, .data, ../lib/nusys/src/mainlib/nugfxthread]
+      - [0xAA550, .data, ../lib/nusys/src/mainlib/nugfxtaskmgr]
+      - [0xAA570, .data, ../lib/nusys/src/mainlib/nucontpakmgr]
+      - [0xAA5B0, .data, ../lib/nusys/src/mainlib/nucontrmbmgr]
+      - [0xAA5E0, .data, ../lib/nusys/src/mainlib/nusimgr]
+      - [0xAA5F0, .data, ../lib/nusys/src/mainlib/nucontmgr]
 
-      - [0xAA570, data, codeseg1/code_113]
-      - [0xAA5B0, data, codeseg1/code_114]
-      - [0xAA5E0, data, codeseg1/code_116]
-      - [0xAA5F0, data, codeseg1/code_118]
       - [0xAA620, .data, ../lib/libultra/src/io/pimgr]
       - [0xAA650, .data, ../lib/libultra/src/io/cartrominit]
       # - [0xAA660, .data, ../lib/libultra/src/io/piacs]
@@ -486,13 +501,13 @@ segments:
       - {  type: .bss, vram: 0x80185030, name: ../lib/libmus/src/aud_thread}
       - {  type: .bss, vram: 0x801851F0, name: ../lib/libmus/src/lib_memory}
       - {  type: .bss, vram: 0x80185200, name: ../lib/libmus/src/aud_samples}
-      - {  type: bss, vram: 0x80185210, name: undefinedBSS2 }
-      - {  type: bss, vram: 0x80187210, name: codeseg2/code_99}
-      - {  type: bss, vram: 0x8018B210, name: codeseg2/code_101}
-      - {  type: bss, vram: 0x8018D230, name: codeseg2/code_102}
-      - {  type: bss, vram: 0x8018F410, name: codeseg2/code_112}
+      # - {  type: bss, vram: 0x80185210, name: undefinedBSS2 }
+      - {  type: .bss, vram: 0x80187210, name: ../lib/nusys/src/mainlib/nusched}
+      - {  type: .bss, vram: 0x8018B210, name: ../lib/nusys/src/mainlib/nugfxthread}
+      - {  type: .bss, vram: 0x8018D230, name: ../lib/nusys/src/mainlib/nugfxtaskmgr}
+      - {  type: .bss, vram: 0x8018F410, name: ../lib/nusys/src/mainlib/nupiinit}
       - {  type: .bss, vram: 0x801916D0, name: ../lib/libultra/src/io/pimgr}
-      # - {  type: .bss, vram: 0x801928A0, name: ../lib/libultra/src/io/siacs }
+      - {  type: .bss, vram: 0x801928A0, name: ../lib/libultra/src/io/piacs }
       - {  type: .bss, vram: 0x801928B0, name: ../lib/libultra/src/io/sptask }
       - {  type: .bss, vram: 0x80192900, name: ../lib/libultra/src/io/vimgr }
       - {  type: .bss, vram: 0x80193B20, name: ../lib/libultra/src/io/motor }
