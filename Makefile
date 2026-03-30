@@ -42,6 +42,7 @@ endif
 ### Output ###
 
 BUILD_DIR := build
+LIBNAUDIO_DIR := lib/libnaudio
 LIBULTRA_DIR := lib/libultra
 LIBMUS_DIR   := lib/libmus
 NUSYS_DIR    := lib/nusys
@@ -122,6 +123,9 @@ $(BUILD_DIR)/$(LIBMUS_DIR)/src/%.o: CPPFLAGS += -I $(LIBULTRA_DIR)/include/PR -I
 
 $(BUILD_DIR)/$(NUSYS_DIR)/src/%.o: OPTFLAGS := -O3 -G0
 $(BUILD_DIR)/$(NUSYS_DIR)/src/%.o: CPPFLAGS += -I $(LIBULTRA_DIR)/include/PR -I $(NUSYS_DIR)/include
+
+$(BUILD_DIR)/$(LIBNAUDIO_DIR)/src/%.o: OPTFLAGS := -O3 -G0 -DN_MICRO 
+$(BUILD_DIR)/$(LIBNAUDIO_DIR)/src/%.o: CPPFLAGS += -I $(LIBULTRA_DIR)/include/PR -I $(LIBULTRA_DIR)/src/audio -I $(LIBNAUDIO_DIR)/include
 
 all: $(ROM)
 
