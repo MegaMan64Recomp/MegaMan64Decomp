@@ -37,6 +37,10 @@ typedef struct {
 #define	FIXED(a) ((a) >> 12)
 
 extern void memcpy(void*, void*, s32);
+extern MATRIX D_801ADD40;
+extern VECTOR D_802046A0;
+// extern s32 D_802046A4;
+// extern s32 D_802046A8;
 
 INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_8002FD30);
 
@@ -246,18 +250,23 @@ INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800306B0);
 
 INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800306C0);
 
+//Possible split
+
+//Forward declarations
+s32 func_80032424(s32);
+s32 func_80032510(s32);
+s32 func_800324D0(s32);
+
 // INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800306F0);
-CameraView* func_800306F0(CameraView* m1, CameraView* m2, CameraView* m3) {
-    s32 temp;
-    s32 x,y,z;
+MATRIX* func_800306F0(MATRIX* m1, MATRIX* m2, MATRIX* m3) {
     s32 row, col;
 
     for (row = 0; row < 3; row++){
         for (col = 0; col < 3; col++){
-            m3->m[row][col] = (
+            m3->m[row][col] = FIXED(
                 m1->m[row][0] * m2->m[0][col] +
                 m1->m[row][1] * m2->m[1][col] +
-                m1->m[row][2] * m2->m[2][col]) >> 0xC;
+                m1->m[row][2] * m2->m[2][col]);
         }
     }
     
@@ -265,17 +274,17 @@ CameraView* func_800306F0(CameraView* m1, CameraView* m2, CameraView* m3) {
 }
 
 // INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_8003077C);
-ViewMtx* func_8003077C(ViewMtx* m1, ViewMtx* m2) {
-    ViewMtx tempMtx;
-    s16 mtx3[3];
+MATRIX* func_8003077C(MATRIX* m1, MATRIX* m2) {
+    s16 tempMtx[3][3];
     s32 row, col;
+    SVECTOR v;
 
     for (row = 0; row < 3; row++){
         for (col = 0; col < 3; col++){
-            tempMtx.m[row][col] = (
+            tempMtx[row][col] = FIXED(
                 m1->m[row][0] * m2->m[0][col] +
                 m1->m[row][1] * m2->m[1][col] +
-                m1->m[row][2] * m2->m[2][col]) >> 0xC;
+                m1->m[row][2] * m2->m[2][col]);
         }
     }
     memcpy(m1, &tempMtx, 0x12);
@@ -283,17 +292,17 @@ ViewMtx* func_8003077C(ViewMtx* m1, ViewMtx* m2) {
 }
 
 // INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80030834);
-ViewMtx* func_80030834(ViewMtx* m1, ViewMtx* m2) {
-    ViewMtx tempMtx;
-    s16 mtx3[3];
+MATRIX* func_80030834(MATRIX* m1, MATRIX* m2) {
+    s16 tempMtx[3][3];
+    SVECTOR v;
     s32 row, col;
 
     for (row = 0; row < 3; row++){
         for (col = 0; col < 3; col++){
-            tempMtx.m[row][col] = (
+            tempMtx[row][col] = FIXED(
                 m1->m[row][0] * m2->m[0][col] +
                 m1->m[row][1] * m2->m[1][col] +
-                m1->m[row][2] * m2->m[2][col]) >> 0xC;
+                m1->m[row][2] * m2->m[2][col]);
         }
     }
     memcpy(m2, &tempMtx, 0x12);
@@ -347,9 +356,9 @@ SVECTOR* func_80031270(MATRIX *m, SVECTOR *v1, SVECTOR *v2) {
         tempVec.vx = FIXED((m->m[0][0] * v2->vx) + (m->m[0][1] * v2->vy) + (m->m[0][2] * v2->vz));
         tempVec.vy = FIXED((m->m[1][0] * v2->vx) + (m->m[1][1] * v2->vy) + (m->m[1][2] * v2->vz));
         tempVec.vz = FIXED((m->m[2][0] * v2->vx) + (m->m[2][1] * v2->vy) + (m->m[2][2] * v2->vz));
-        v2->vx = (s16) tempVec.vx;
-        v2->vy = (s16) tempVec.vy;
-        v2->vz = (s16) tempVec.vz;
+        v2->vx = tempVec.vx;
+        v2->vy = tempVec.vy;
+        v2->vz = tempVec.vz;
     } else {
         v2->vx = FIXED((m->m[0][0] * v1->vx) + (m->m[0][1] * v1->vy) + (m->m[0][2] * v1->vz));
         v2->vy = FIXED((m->m[1][0] * v1->vx) + (m->m[1][1] * v1->vy) + (m->m[1][2] * v1->vz));
@@ -387,14 +396,17 @@ MATRIX* func_80031428(SVECTOR *r,MATRIX *m){
 //RotMatrixYXZ
 // INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031600);
 MATRIX* func_80031600(SVECTOR* r, MATRIX* m) {
-    int sx = func_80032510(r->vx); // rsin
-    int cx = func_800324D0(r->vx); // rcos
+    s32 sx, sy, sz;
+    s32 cx, cy, cz;
 
-    int sy = func_80032510(r->vy); // rsin
-    int cy = func_800324D0(r->vy); // rcos
+    sx = func_80032510(r->vx);
+    cx = func_800324D0(r->vx);
 
-    int sz = func_80032510(r->vz); // rsin
-    int cz = func_800324D0(r->vz); // rcos
+    sy = func_80032510(r->vy);
+    cy = func_800324D0(r->vy);
+
+    sz = func_80032510(r->vz);
+    cz = func_800324D0(r->vz);
 
     m->m[0][0] = FIXED(cy * cz + (((sy * sx) >> 12) * sz));
     m->m[0][1] = FIXED(-cy * sz + (((sy * sx) >> 12) * cz));
@@ -442,56 +454,240 @@ MATRIX* func_800317C0(s32 r, MATRIX* m1) {
     return m1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800318C8);
-// MATRIX* func_800318C8(s32 r, MATRIX* m1) {
-//     s16 rsin, rcos;
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800318C8);
+MATRIX* func_800318C8(s32 r, MATRIX* m1) {
+    s16 rsin, rcos;
 
-//     rsin = func_80032510(r);
-//     rcos = func_800324D0(r);
-//     m1->m[0][0] = 0x1000;
-//     m1->m[0][1] = 0;
-//     m1->m[0][2] = 0;
-//     m1->m[1][0] = 0;
-//     m1->m[1][1] = rcos;
-//     m1->m[1][2] = -rsin;
-//     m1->m[2][0] = 0;
-//     m1->m[2][1] = rsin;
-//     m1->m[2][2] = rcos;
+    rsin = func_80032510(r);
+    rcos = func_800324D0(r);
+    m1->m[0][0] = 0x1000;
+    m1->m[0][1] = 0;
+    m1->m[0][2] = 0;
+    m1->m[1][0] = 0;
+    m1->m[1][1] = rcos;
+    m1->m[1][2] = -rsin;
+    m1->m[2][0] = 0;
+    m1->m[2][1] = rsin;
+    m1->m[2][2] = rcos;
 
-//     return m1;
-// }
+    return m1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031938);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031938);
+MATRIX* func_80031938(s32 r, MATRIX* m1) {
+    s16 rsin, rcos;
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800319B4);
+    rsin = func_80032510(r);
+    rcos = func_800324D0(r);
+    m1->m[0][0] = 0x1000;
+    m1->m[0][1] = 0;
+    m1->m[0][2] = 0;
+    m1->m[1][0] = 0;
+    m1->m[1][1] = rcos;
+    m1->m[1][2] = -rsin;
+    m1->m[2][0] = 0;
+    m1->m[2][1] = rsin;
+    m1->m[2][2] = rcos;
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031AC0);
+    m1->t[0] = 0;
+    m1->t[1] = 0;
+    m1->t[2] = 0;
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031B40);
+    return m1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031BB4);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800319B4);
+MATRIX* func_800319B4(s32 r, MATRIX* m1) {
+    MATRIX m2;
+    MATRIX m3;
+    MATRIX* m3Ptr;
+    s32 row, col;
+    s16 rsin, rcos;
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031CBC);
+    memcpy(&m3, m1, 0x20);
+    rsin = func_80032510(r);
+    rcos = func_800324D0(r);
+    
+    m2.m[0][0] = rcos;
+    m2.m[0][1] = 0;
+    m2.m[0][2] = rsin;
+    m2.m[1][0] = 0;
+    m2.m[1][1] = 0x1000;
+    m2.m[1][2] = 0;
+    m2.m[2][0] = -rsin;
+    m2.m[2][1] = 0;
+    m2.m[2][2] = rcos;
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031D38);
+    m3Ptr = &m3;
+    for(row=0; row<3; row++){
+        for(col=0; col<3; col++){
+            m1->m[row][col] = FIXED(
+                m2.m[row][0] * m3Ptr->m[0][col] +
+                m2.m[row][1] * m3Ptr->m[1][col] +
+                m2.m[row][2] * m3Ptr->m[2][col]);
+        }
+    }
+    return m1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031DA8);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031AC0);
+MATRIX* func_80031AC0(s32 r, MATRIX* m) {
+    s16 rsin, rcos;
+
+    rsin = func_80032510(r);
+    rcos = func_800324D0(r);
+    
+    m->m[0][0] = rcos;
+    m->m[0][1] = 0;
+    m->m[0][2] = rsin;
+    m->m[1][0] = 0;
+    m->m[1][1] = 0x1000;
+    m->m[1][2] = 0;
+    m->m[2][0] = -rsin;
+    m->m[2][1] = 0;
+    m->m[2][2] = rcos;
+    
+    m->t[0] = 0;
+    m->t[1] = 0;
+    m->t[2] = 0;
+
+    return m;
+}
+
+
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031B40);
+MATRIX* func_80031B40(s32 r, MATRIX* m) {
+    s16 rsin, rcos;
+
+    rsin = func_80032510(r);
+    rcos = func_800324D0(r);
+    
+    m->m[0][0] = rcos;
+    m->m[0][1] = 0;
+    m->m[0][2] = rsin;
+    m->m[1][0] = 0;
+    m->m[1][1] = 0x1000;
+    m->m[1][2] = 0;
+    m->m[2][0] = -rsin;
+    m->m[2][1] = 0;
+    m->m[2][2] = rcos;
+
+    return m;
+}
+
+
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031BB4);
+MATRIX* func_80031BB4(s32 r, MATRIX* m1) {
+    MATRIX m2;
+    MATRIX m3;
+    MATRIX* m3Ptr;
+    s32 row, col;
+    s16 rsin, rcos;
+
+    memcpy(&m3, m1, 0x20);
+    rsin = func_80032510(r);
+    rcos = func_800324D0(r);
+    
+    m2.m[0][0] = rcos;
+    m2.m[0][1] = -rsin;
+    m2.m[0][2] = 0;
+    m2.m[1][0] = rsin;
+    m2.m[1][1] = rcos;
+    m2.m[1][2] = 0;
+    m2.m[2][0] = 0;
+    m2.m[2][1] = 0;
+    m2.m[2][2] = 0x1000;
+
+    m3Ptr = &m3;
+    for(row=0; row<3; row++){
+        for(col=0; col<3; col++){
+            m1->m[row][col] = FIXED(
+                m2.m[row][0] * m3Ptr->m[0][col] +
+                m2.m[row][1] * m3Ptr->m[1][col] +
+                m2.m[row][2] * m3Ptr->m[2][col]);
+        }
+    }
+    return m1;
+}
+
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031CBC);
+MATRIX* func_80031CBC(s32 r, MATRIX* m) {
+    s16 rsin, rcos;
+    
+    rsin = func_80032510(r);
+    rcos = func_800324D0(r);
+    
+    m->m[0][0] = rcos;
+    m->m[0][1] = -rsin;
+    m->m[0][2] = 0;
+    m->m[1][0] = rsin;
+    m->m[1][1] = rcos;
+    m->m[1][2] = 0;
+    m->m[2][0] = 0;
+    m->m[2][1] = 0;
+    m->m[2][2] = 0x1000;
+    
+    m->t[0] = 0;
+    m->t[1] = 0;
+    m->t[2] = 0;
+
+    return m;
+}
+
+
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031D38);
+MATRIX* func_80031D38(s32 r, MATRIX* m) {
+    s16 sin, cos;
+    
+    sin = func_80032510(r);
+    cos = func_800324D0(r);
+    
+    m->m[0][0] = cos;
+    m->m[0][1] = -sin;
+    m->m[0][2] = 0;
+    m->m[1][0] = sin;
+    m->m[1][1] = cos;
+    m->m[1][2] = 0;
+    m->m[2][0] = 0;
+    m->m[2][1] = 0;
+    m->m[2][2] = 0x1000;
+    return m;
+}
+
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031DA8);
+MATRIX* func_80031DA8(MATRIX* m, VECTOR* v) {
+    s32 row = 0;
+
+    do {
+        m->m[row][0] = FIXED(m->m[row][0] * v->vx);
+        m->m[row][1] = FIXED(m->m[row][1] * v->vy);
+        m->m[row][2] = FIXED(m->m[row][2] * v->vz);
+        row += 1;
+    } while (row < 3);
+    
+    return m;
+}
 
 // INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031E10);
 //Transpose 3x3 matrix
-Mtx* func_80031E10(short vp[3][3] , short mtx[3][3]) {
-    s32 i, j;
+MATRIX* func_80031E10(MATRIX *m1, MATRIX* m2) {
+    s32 row, col;
 
-    for (i = 0; i < 3; i++) {
-        for (j = 0; j < 3; j++){
-            mtx[j][i] = vp[i][j];
+    for (row = 0; row < 3; row++) {
+        for (col = 0; col < 3; col++){
+            m2->m[col][row] = m1->m[row][col];
         }
     }
     
-    return (Mtx*)mtx;
+    return m2;
 }
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031E5C);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031E5C);
+void func_80031E5C(s16 m[3][3]){
+  memcpy(&D_801ADD40, m, 0x12);
+  return;
+}
+
 
 void func_80031E84(void) {
 }
@@ -499,7 +695,13 @@ void func_80031E84(void) {
 void func_80031E8C(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031E94);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031E94);
+void func_80031E94(MATRIX* m) {
+    D_802046A0.vx = m->t[0];
+    D_802046A0.vy = m->t[1];
+    D_802046A0.vz = m->t[2];
+    return;
+}
 
 void func_80031EBC(void) {
 }
@@ -524,21 +726,73 @@ INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_8003216C);
 
 INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800321EC);
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032308);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032308);
+s32 func_80032308(VECTOR* v, SVECTOR* vs) {
+    s32 val;
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032424);
+    val = func_80032424((v->vx * v->vx) + (v->vy * v->vy) + (v->vz * v->vz));
+    if (val != 0) {
+        vs->vx = ((v->vx << 0xC) / val);
+        vs->vy = ((v->vy << 0xC) / val);
+        vs->vz = ((v->vz << 0xC) / val);
+    }
+    return val;
+}
+
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032424);
+s32 func_80032424(s32 arg0) {
+    u32 temp_a1;
+    u32 var_v1;
+    
+    var_v1 = 1;
+    if (arg0 == 0) {
+        return 0U;
+    } 
+
+    temp_a1 = arg0;
+    while (var_v1 < temp_a1) {
+        var_v1 *= 2;
+        temp_a1 >>= 1;
+    } 
+
+    do {
+        temp_a1 = var_v1;
+        var_v1 = (u32) ((arg0 / temp_a1) + temp_a1) >> 1;
+    } while (var_v1 < temp_a1);
+    
+    return temp_a1;
+}
+
 
 void func_80032490(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032498);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032498);
+s32 func_80032498(s32 a) {
+    return func_800324D0(a);
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800324B4);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800324B4);
+s32 func_800324B4(s32 a) {
+    return func_80032510(a);
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800324D0);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800324D0);
+s32 func_800324D0(s32 a) {
+    a &= 0xfff;
+    if (a == 0) {
+        return 0x1000;
+    }
+    else if (a == 0x800) {
+        return -0x1000;
+    }
+    else {
+        return coss(a * 0x10) << 0x10 >> 0x13;
+    }
+}
 
 // INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032510);
-int func_80032510(s32 a) {
+s32 func_80032510(s32 a) {
     a &= 0xfff;
     if (a == 0x400) {
         return 0x1000;
