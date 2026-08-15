@@ -9,15 +9,15 @@ options:
   compiler: KMC
   header_encoding: ASCII 
 
-  # asm_path: asm
-  # src_path: src
-  # asset_path: bin
+  asm_path: asm
+  src_path: src
+  asset_path: bin
+  build_path: build
   # nonmatchings_path: nonmatching
   # matchings_path: matching
-  build_path: build
-  #symbol_name_format: $VRAM_$ROM
+  # symbol_name_format: $VRAM_$ROM
 
-  make_full_disasm_for_code: True
+  # make_full_disasm_for_code: True
   # disassemble_all: True
   # do_c_func_detection: False
   find_file_boundaries: False
@@ -72,7 +72,7 @@ segments:
   - name: main
     find_file_boundaries: False
     suggestion_rodata_section_start: False
-    symbol_name_format: $VRAM_$ROM
+    # symbol_name_format: $VRAM_$ROM
     type: code
     start: 0x1000
     vram: 0x80025C00
@@ -89,7 +89,7 @@ segments:
     #  - [0x04240, asm, codeseg1/code_7] # Merge for RODATA AD060
     #  - [0x04800, asm, codeseg1/code_8] # Merge for RODATA AD060
     #  - [0x048F0, asm, codeseg1/code_9] # Merge for RODATA AD060
-    #  - [0x05B10, asm, codeseg1/code_10]# Merge for RODATA AD060
+    #  - [0x05B10, asm, codeseg1/code_10]# Merge for RODATA AD060 //Audio Functions
       - [0x07470, asm, codeseg1/code_11]
       - [0x07820, asm, codeseg1/code_12]
       - [0x07AF0, asm, codeseg1/code_13]
@@ -809,7 +809,7 @@ segments:
       - [0x150230, asm, ovl9/code_16] # 80174E30
       - [0x1504C0, bin]               # 801750C0
        
-  - name: ovl10
+  - name: ovl_downtown
     overlay: True
     dir: overlays
     symbol_name_format: $VRAM_$SEG
