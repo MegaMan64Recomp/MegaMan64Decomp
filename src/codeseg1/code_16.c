@@ -39,8 +39,6 @@ typedef struct {
 extern void memcpy(void*, void*, s32);
 extern MATRIX D_801ADD40;
 extern VECTOR D_802046A0;
-// extern s32 D_802046A4;
-// extern s32 D_802046A8;
 
 INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_8002FD30);
 
@@ -287,7 +285,9 @@ MATRIX* func_8003077C(MATRIX* m1, MATRIX* m2) {
                 m1->m[row][2] * m2->m[2][col]);
         }
     }
+
     memcpy(m1, &tempMtx, 0x12);
+
     return m1;
 }
 
@@ -305,7 +305,9 @@ MATRIX* func_80030834(MATRIX* m1, MATRIX* m2) {
                 m1->m[row][2] * m2->m[2][col]);
         }
     }
+
     memcpy(m2, &tempMtx, 0x12);
+
     return m2;
 }
 
@@ -333,16 +335,16 @@ VECTOR* func_80030AA0(MATRIX* m, VECTOR* v0, VECTOR* v1) {
     VECTOR tempVec;
     
     if (v0 == v1) {
-        tempVec.vx = ((long long)m->m[0][0] * v1->vx + (long long)m->m[0][1] * v1->vy + (long long)m->m[0][2] * v1->vz) >> 12;
-        tempVec.vy = ((long long)m->m[1][0] * v1->vx + (long long)m->m[1][1] * v1->vy + (long long)m->m[1][2] * v1->vz) >> 12;
-        tempVec.vz = ((long long)m->m[2][0] * v1->vx + (long long)m->m[2][1] * v1->vy + (long long)m->m[2][2] * v1->vz) >> 12;
+        tempVec.vx = FIXED((long long)m->m[0][0] * v1->vx + (long long)m->m[0][1] * v1->vy + (long long)m->m[0][2] * v1->vz);
+        tempVec.vy = FIXED((long long)m->m[1][0] * v1->vx + (long long)m->m[1][1] * v1->vy + (long long)m->m[1][2] * v1->vz);
+        tempVec.vz = FIXED((long long)m->m[2][0] * v1->vx + (long long)m->m[2][1] * v1->vy + (long long)m->m[2][2] * v1->vz);
         v1->vx = tempVec.vx;
         v1->vy = tempVec.vy;
         v1->vz = tempVec.vz;
     } else {
-        v1->vx = ((long long)m->m[0][0] * v0->vx + (long long)m->m[0][1] * v0->vy + (long long)m->m[0][2] * v0->vz) >> 12;
-        v1->vy = ((long long)m->m[1][0] * v0->vx + (long long)m->m[1][1] * v0->vy + (long long)m->m[1][2] * v0->vz) >> 12;
-        v1->vz = ((long long)m->m[2][0] * v0->vx + (long long)m->m[2][1] * v0->vy + (long long)m->m[2][2] * v0->vz) >> 12;
+        v1->vx = FIXED((long long)m->m[0][0] * v0->vx + (long long)m->m[0][1] * v0->vy + (long long)m->m[0][2] * v0->vz);
+        v1->vy = FIXED((long long)m->m[1][0] * v0->vx + (long long)m->m[1][1] * v0->vy + (long long)m->m[1][2] * v0->vz);
+        v1->vz = FIXED((long long)m->m[2][0] * v0->vx + (long long)m->m[2][1] * v0->vy + (long long)m->m[2][2] * v0->vz);
     }
     return v1;
 }
@@ -408,14 +410,14 @@ MATRIX* func_80031600(SVECTOR* r, MATRIX* m) {
     sz = func_80032510(r->vz);
     cz = func_800324D0(r->vz);
 
-    m->m[0][0] = FIXED(cy * cz + (((sy * sx) >> 12) * sz));
-    m->m[0][1] = FIXED(-cy * sz + (((sy * sx) >> 12) * cz));
+    m->m[0][0] = FIXED(cy * cz + FIXED(sy * sx) * sz);
+    m->m[0][1] = FIXED(-cy * sz + FIXED(sy * sx) * cz);
     m->m[0][2] = FIXED(sy * cx);
     m->m[1][0] = FIXED(cx * sz);
     m->m[1][1] = FIXED(cx * cz);
-    m->m[1][2] = (-sx);
-    m->m[2][0] = FIXED(-sy * cz + (((cy * sx) >> 12) * sz));
-    m->m[2][1] = FIXED(sy * sz + (((cy * sx) >> 12) * cz));
+    m->m[1][2] = -sx;
+    m->m[2][0] = FIXED(-sy * cz + FIXED(cy * sx) * sz);
+    m->m[2][1] = FIXED(sy * sz + FIXED(cy * sx) * cz);
     m->m[2][2] = FIXED(cy * cx);
 
     return m;
@@ -430,8 +432,10 @@ MATRIX* func_800317C0(s32 r, MATRIX* m1) {
     s16 rsin, rcos;
 
     memcpy(&m3, m1, 0x20);
+
     rsin = func_80032510(r);
     rcos = func_800324D0(r);
+
     m2.m[0][0] = 0x1000;
     m2.m[0][1] = 0;
     m2.m[0][2] = 0;
@@ -451,6 +455,7 @@ MATRIX* func_800317C0(s32 r, MATRIX* m1) {
                 m2.m[row][2] * m3Ptr->m[2][col]);
         }
     }
+
     return m1;
 }
 
@@ -460,6 +465,7 @@ MATRIX* func_800318C8(s32 r, MATRIX* m1) {
 
     rsin = func_80032510(r);
     rcos = func_800324D0(r);
+
     m1->m[0][0] = 0x1000;
     m1->m[0][1] = 0;
     m1->m[0][2] = 0;
@@ -479,6 +485,7 @@ MATRIX* func_80031938(s32 r, MATRIX* m1) {
 
     rsin = func_80032510(r);
     rcos = func_800324D0(r);
+
     m1->m[0][0] = 0x1000;
     m1->m[0][1] = 0;
     m1->m[0][2] = 0;
@@ -505,6 +512,7 @@ MATRIX* func_800319B4(s32 r, MATRIX* m1) {
     s16 rsin, rcos;
 
     memcpy(&m3, m1, 0x20);
+
     rsin = func_80032510(r);
     rcos = func_800324D0(r);
     
@@ -585,6 +593,7 @@ MATRIX* func_80031BB4(s32 r, MATRIX* m1) {
     s16 rsin, rcos;
 
     memcpy(&m3, m1, 0x20);
+
     rsin = func_80032510(r);
     rcos = func_800324D0(r);
     
@@ -709,22 +718,82 @@ void func_80031EBC(void) {
 void func_80031EC4(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031ECC);
+extern s16 D_8019A7AC;
+extern s32 D_801ADCD8;
+extern s32 D_80204698;
+extern s16 D_8020469C;
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031ECC);
+void func_80031ECC(s32 arg0,s32 arg1){
+  D_8020469C = 160 - arg0;
+  D_8019A7AC = 120 - arg1;
+  D_80204698 = arg0;
+  D_801ADCD8 = arg1;
+  return;
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031F00);
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031F0C);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031F00);
+extern s32 D_80195470;
+void func_80031F00(s32 arg0) {
+  D_80195470 = arg0;
+  return;
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032068);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80031F0C);
+extern VECTOR D_801BC0A8;
+s32 func_80031F0C(SVECTOR* v1, SVECTOR* v2) {
+    func_800308E8(&D_801ADD40, v1, &D_801BC0A8);
+    D_801BC0A8.vx += D_802046A0.vx;
+    D_801BC0A8.vy += D_802046A0.vy;
+    D_801BC0A8.vz += D_802046A0.vz;
+
+    v2->vx = ((D_80195470 / 2) * D_801BC0A8.vx / (D_801BC0A8.vz | 1)) + D_80204698;
+    v2->vy = ((D_80195470 / 2) * D_801BC0A8.vy / (D_801BC0A8.vz | 1)) + D_801ADCD8;
+
+    return D_801BC0A8.vz / 4;
+}
+
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032068);
+void func_80032068(SVECTOR* vs, VECTOR* v) {
+  func_800308E8(&D_801ADD40, vs, v);
+  v->vx = v->vx + D_802046A0.vx;
+  v->vy = v->vy + D_802046A0.vy;
+  v->vz = v->vz + D_802046A0.vz;
+  return;
+}
 
 void func_800320DC(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800320E4);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800320E4);
+void func_800320E4(VECTOR *v1,VECTOR *v2, VECTOR *v3){
+  v3->vx = FIXED(v1->vy * v2->vz - v1->vz * v2->vy);
+  v3->vy = FIXED(v1->vz * v2->vx - v1->vx * v2->vz);
+  v3->vz = FIXED(v1->vx * v2->vy - v1->vy * v2->vx);
+  return;
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_8003216C);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_8003216C);
+void func_8003216C(VECTOR *v1,VECTOR *v2, VECTOR *v3){
+  v3->vx = v1->vy * v2->vz - v1->vz * v2->vy;
+  v3->vy = v1->vz * v2->vx - v1->vx * v2->vz;
+  v3->vz = v1->vx * v2->vy - v1->vy * v2->vx;
+  return;
+}
 
-INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800321EC);
+// INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_800321EC);
+s32 func_800321EC(VECTOR* v1, VECTOR* v2) {
+    s32 val;
+
+    val = func_80032424((v1->vx * v1->vx) + (v1->vy * v1->vy) + (v1->vz * v1->vz));
+    if (val != 0) {
+        v2->vx = ((v1->vx << 0xC) / val);
+        v2->vy = ((v1->vy << 0xC) / val);
+        v2->vz = ((v1->vz << 0xC) / val);
+    }
+
+    return val;
+}
 
 // INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032308);
 s32 func_80032308(VECTOR* v, SVECTOR* vs) {
@@ -736,28 +805,30 @@ s32 func_80032308(VECTOR* v, SVECTOR* vs) {
         vs->vy = ((v->vy << 0xC) / val);
         vs->vz = ((v->vz << 0xC) / val);
     }
+
     return val;
 }
 
 // INCLUDE_ASM("asm/nonmatchings/codeseg1/code_16", func_80032424);
-s32 func_80032424(s32 arg0) {
+// sqrt
+s32 func_80032424(s32 num) {
     u32 temp_a1;
     u32 var_v1;
     
     var_v1 = 1;
-    if (arg0 == 0) {
-        return 0U;
+    if (num == 0) {
+        return 0;
     } 
 
-    temp_a1 = arg0;
+    temp_a1 = num;
     while (var_v1 < temp_a1) {
         var_v1 *= 2;
-        temp_a1 >>= 1;
+        temp_a1 /= 2;
     } 
 
     do {
         temp_a1 = var_v1;
-        var_v1 = (u32) ((arg0 / temp_a1) + temp_a1) >> 1;
+        var_v1 = ((num / temp_a1) + temp_a1) / 2;
     } while (var_v1 < temp_a1);
     
     return temp_a1;
