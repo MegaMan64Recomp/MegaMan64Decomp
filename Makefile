@@ -41,15 +41,15 @@ endif
 
 ### Output ###
 
-BUILD_DIR := build
-LIBNAUDIO_DIR := lib/libnaudio
-LIBULTRA_DIR := lib/libultra
-LIBMUS_DIR   := lib/libmus
-NUSYS_DIR    := lib/nusys
-ROM       := $(BUILD_DIR)/$(TARGET).z64
-ELF       := $(BUILD_DIR)/$(TARGET).elf
-LD_SCRIPT := $(TARGET).ld
-LD_MAP    := $(BUILD_DIR)/$(TARGET).map
+BUILD_DIR 		:= build
+LIBNAUDIO_DIR 	:= lib/libnaudio
+LIBULTRA_DIR 	:= lib/libultra
+LIBMUS_DIR   	:= lib/libmus
+NUSYS_DIR    	:= lib/nusys
+ROM       		:= $(BUILD_DIR)/$(TARGET).z64
+ELF      		:= $(BUILD_DIR)/$(TARGET).elf
+LD_SCRIPT 		:= $(TARGET).ld
+LD_MAP    		:= $(BUILD_DIR)/$(TARGET).map
 
 
 ### Tools ###
@@ -58,10 +58,10 @@ PYTHON		:= python3
 N64CKSUM	:= $(PYTHON) tools/n64cksum.py
 SPLAT_YAML	:= megaman64.yaml
 MOD_YAML	:= megaman64_mod.yaml
-SPLAT	:= $(PYTHON) -m splat split $(SPLAT_YAML)
+SPLAT		:= $(PYTHON) -m splat split $(SPLAT_YAML)
 MOD_SPLAT	:= $(PYTHON) -m splat split $(MOD_YAML)
-EMULATOR   := mupen64plus
-DIFF       := diff
+EMULATOR	:= mupen64plus
+DIFF		:= diff
 
 CROSS    := mips-linux-gnu-
 AS       := $(CROSS)as
@@ -73,25 +73,25 @@ CC       := tools/gcc_kmc/$(DETECTED_OS)/2.7.2/gcc
 CC_HOST  := gcc
 CPP      := cpp -P
 
-PRINT := printf '
- ENDCOLOR := \033[0m
- WHITE     := \033[0m
- ENDWHITE  := $(ENDCOLOR)
- GREEN     := \033[0;32m
- ENDGREEN  := $(ENDCOLOR)
- BLUE      := \033[0;34m
- ENDBLUE   := $(ENDCOLOR)
- YELLOW    := \033[0;33m
- ENDYELLOW := $(ENDCOLOR)
- PURPLE    := \033[0;35m
- ENDPURPLE := $(ENDCOLOR)
-ENDLINE := \n'
+PRINT	:= printf '
+ ENDCOLOR	:= \033[0m
+ WHITE		:= \033[0m
+ ENDWHITE	:= $(ENDCOLOR)
+ GREEN		:= \033[0;32m
+ ENDGREEN	:= $(ENDCOLOR)
+ BLUE		:= \033[0;34m
+ ENDBLUE	:= $(ENDCOLOR)
+ YELLOW 	:= \033[0;33m
+ ENDYELLOW	:= $(ENDCOLOR)
+ PURPLE 	:= \033[0;35m
+ ENDPURPLE	:= $(ENDCOLOR)
+ENDLINE	:= \n'
 
 ### Compiler Options ###
 
-ASFLAGS        := -G 0 -I include -mips3 -mabi=32
+ASFLAGS        := -G 0 -I include -I $(NUSYS_DIR)/include -mips3 -mabi=32
 CFLAGS         := -G0 -mips3 -mgp32 -mfp32 -D_LANGUAGE_C -D_FINALROM=0 -DNDEBUG
-CPPFLAGS       := -I include -I $(BUILD_DIR)/include -I src -I $(LIBULTRA_DIR)/include -DF3DEX_GBI_2 -D_LANGUAGE_C -D_MIPS_SZLONG=32
+CPPFLAGS       := -I include -I $(BUILD_DIR)/include -I src -I $(LIBULTRA_DIR)/include -I $(NUSYS_DIR)/include -DF3DEX_GBI_2 -D_LANGUAGE_C -D_MIPS_SZLONG=32
 LDFLAGS        := -T undefined_syms.txt -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T $(LD_SCRIPT) -Map $(LD_MAP) --no-check-sections
 CHECK_WARNINGS := -Wall -Wextra -Wunused-but-set-variable -Wno-format-security -Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast -m32
 CFLAGS_CHECK   := -fcommon -fsyntax-only -fsigned-char -nostdinc -fno-builtin -D CC_CHECK -D _LANGUAGE_C -std=gnu90 $(CHECK_WARNINGS)
@@ -163,7 +163,8 @@ $(BUILD_DIR)/%.c.o: %.c
 	@$(PRINT)$(GREEN)Compiling C file: $(ENDGREEN)$(BLUE)$<$(ENDBLUE)$(ENDLINE)
 	@mkdir -p $(shell dirname $@)
 	@$(CC_HOST) $(CFLAGS_CHECK) $(CPPFLAGS) -MMD -MP -MT $@ -MF $@.d $<
-	$(V)export COMPILER_PATH=tools/gcc_kmc/$(DETECTED_OS)/2.7.2 && $(CC) $(OPTFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+	$(V)COMPILER_PATH=tools/gcc_kmc/$(DETECTED_OS)/2.7.2 $(CC) $(OPTFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+# 	@$(STRIP) $@ -N dummy-symbol-name
 
 # Assemble .s files with modern gnu as
 $(BUILD_DIR)/%.s.o: %.s

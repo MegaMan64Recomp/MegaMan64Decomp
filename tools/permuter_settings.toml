@@ -1,4 +1,3 @@
-#assembler_command = "mips-linux-gnu-as -G0 -Iinclude -mips3 -mabi=32"
 compiler_type = "gcc"
 
 [preserve_macros]
@@ -10,4 +9,3 @@ OS_K0_TO_PHYSICAL = "int"
 PRIMITIVE = "int"
 
 #[decompme.compilers]
-#"COMPILER_PATH=tools/gcc_kmc/linux/2.7.2" = "gcc2.7.2kmc"
