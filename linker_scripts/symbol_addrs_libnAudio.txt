@@ -1,0 +1,48 @@
+//libn_audio functions
+
+n_alAuxBusPull = 0x8008EFE0;
+n_alFxNew = 0x8008F080;
+alN_PVoiceNew = 0x8008F46C;
+n_alEnvmixerPull = 0x8008F5A0;
+n_alEnvmixerParam = 0x8008FB18;
+//_pullSubFrame = 0x8008FBBC;
+_getRate = 0x8008FDDC;
+_getVol = 0x8008FF1C;
+n_alAdpcmPull = 0x8008FF70;
+n_alLoadParam = 0x800903B8;
+_decodeChunk = 0x80090544;
+n_alResamplePull = 0x80090690;
+n_alResampleParam = 0x8009084C;
+n_alFxPull = 0x80090870;
+n_alFxParamHdl = 0x80090B80;
+_n_loadOutputBuffer = 0x80090D70;
+_n_loadBuffer = 0x80090F80;
+_n_saveBuffer = 0x800910A8;
+_n_filterBuffer = 0x800911C0;
+n_alInit = 0x80091260;
+n_alClose = 0x800912A4;
+n_alSynAddPlayer = 0x800912E0;
+n_alSynAllocVoice = 0x80091330;
+_n_allocatePVoice = 0x80091448;
+n_alSynDelete = 0x80091510;
+n_alSynSetFXMix = 0x80091520;
+n_alSynSetPan = 0x800915C0;
+n_alSynSetPitch = 0x80091650;
+n_alSynSetVol = 0x800916E0;
+n_alSynStartVoice = 0x80091790;
+n_alSynStopVoice = 0x80091820;
+n_alSynNew = 0x800918A0;
+n_alAudioFrame = 0x80091B10;
+__n_allocParam = 0x80091C78;
+_n_freeParam = 0x80091CA4;
+_n_collectPVoices = 0x80091CBC;
+ _n_freePVoice = 0x80091D1C;
+_n_timeToSamplesNoRound = 0x80091D54;
+_n_timeToSamples = 0x80091DA4;
+n_alSavePull = 0x80091E00;
+n_alSynAllocFX = 0x80091E50;
+n_alMainBusPull = 0x80091EA0;
+
+//Data
+n_alGlobals = 0x800CF110; // size:0x4
+n_syn = 0x800cf114; // size:0x4

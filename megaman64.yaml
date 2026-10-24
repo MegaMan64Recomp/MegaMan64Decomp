@@ -17,11 +17,12 @@ options:
   # matchings_path: matching
   # symbol_name_format: $VRAM_$ROM
 
-  # make_full_disasm_for_code: True
-  # disassemble_all: True
+  make_full_disasm_for_code: True
+  disassemble_all: True
   # do_c_func_detection: False
   find_file_boundaries: False
-  # pair_rodata_to_text: False
+  pair_rodata_to_text: True
+  migrate_rodata_to_functions: True
 
   ld_script_path: megaman64.ld
   ld_dependencies: True
@@ -31,7 +32,7 @@ options:
 
   #o_as_suffix: True
   use_legacy_include_asm: False
-  # create_asm_dependencies: True
+  create_asm_dependencies: True
   # detect_redundant_function_end: False
   mips_abi_float_regs: o32
 
@@ -44,8 +45,10 @@ options:
 
   symbol_addrs_path:
     - symbol_addrs.txt
-  # reloc_addrs_path:
-  #   - reloc_addrs.txt
+    - linker_scripts/symbol_addrs_libultra.txt
+    - linker_scripts/symbol_addrs_libmus.txt
+    - linker_scripts/symbol_addrs_libnAudio.txt
+    - linker_scripts/symbol_addrs_nusys.txt
 
   # undefined_funcs_auto_path: undefined_funcs_auto.txt
   # undefined_syms_auto_path: undefined_syms_auto.txt
@@ -68,6 +71,7 @@ segments:
   - name: boot
     type: bin
     start: 0x40
+    
   
   - name: main
     find_file_boundaries: False
@@ -76,38 +80,40 @@ segments:
     type: code
     start: 0x1000
     vram: 0x80025C00
+    # exclusive_ram_id: main
     subalign: 16
     bss_size: 0x14A500
     subsegments:
       - [0x1000, hasm, entry]
-      - [0x01060, c, codeseg1/code_1]
+      - [0x01060, asm, codeseg1/code_1]
       - [0x01500, asm, codeseg1/code_2]
-      - [0x01D30, asm, codeseg1/code_3]
-    #  - [0x02950, asm, codeseg1/code_4] # Merge for RODATA AD060
-    #  - [0x03FF0, asm, codeseg1/code_5] # Merge for RODATA AD060
-    #  - [0x04130, asm, codeseg1/code_6] # Merge for RODATA AD060
-    #  - [0x04240, asm, codeseg1/code_7] # Merge for RODATA AD060
-    #  - [0x04800, asm, codeseg1/code_8] # Merge for RODATA AD060
-    #  - [0x048F0, asm, codeseg1/code_9] # Merge for RODATA AD060
-    #  - [0x05B10, asm, codeseg1/code_10]# Merge for RODATA AD060 //Audio Functions
-      - [0x07470, asm, codeseg1/code_11]
-      - [0x07820, asm, codeseg1/code_12]
-      - [0x07AF0, asm, codeseg1/code_13]
+      - [0x01D30, c, codeseg1/code_3]
+      # - [0x02950, asm, codeseg1/code_4] # Merge for RODATA AD060
+      # - [0x03FF0, asm, codeseg1/code_5] # Merge for RODATA AD060
+      # - [0x04130, asm, codeseg1/code_6] # Merge for RODATA AD060
+      # - [0x04240, asm, codeseg1/code_7] # Merge for RODATA AD060
+      # - [0x04800, asm, codeseg1/code_8] # Merge for RODATA AD060
+      # - [0x048F0, asm, codeseg1/code_9] # Merge for RODATA AD060
+      # - [0x05B10, asm, codeseg1/code_10] # Merge for RODATA AD060 //Audio Functions
+      - [0x07470, .c, codeseg1/perspective]
+      - [0x07820, .c, codeseg1/code_12] #matrix related functions
+      - [0x07AF0, asm, codeseg1/code_13] #textures
       - [0x07ED0, asm, codeseg1/code_14]
-      - [0x0A190, asm, codeseg1/code_15]
-      - [0x0B130, c, codeseg1/code_16]
-      - [0x0DCE0, asm, codeseg1/code_17]
-      - [0x0DD20, asm, codeseg1/code_18]
-      - [0x0E3C0, asm, codeseg1/code_19]
+      - [0x0A190, c, codeseg1/code_15]
+      - [0x0B130, c, codeseg1/code_16] #UI_Gfx
+      - [0x0BAF0, c, codeseg1/libgte]
+      - [0x0DCE0, c, codeseg1/code_17] #retrace_wait
+      - [0x0DD20, asm, codeseg1/code_18] #controls
+      - [0x0E3C0, asm, codeseg1/code_19] #camera
       - [0x108D0, asm, codeseg1/code_20]
       - [0x11F90, asm, codeseg1/code_21]
       - [0x12240, asm, codeseg1/code_22]
-      - [0x12F70, asm, codeseg1/code_23]
+      - [0x12F70, c, codeseg1/code_23]
     #  - [0x13180, asm, codeseg1/code_24] # Merge for RODATA AD1F0
     #  - [0x13950, asm, codeseg1/code_25] # Merge for RODATA AD1F0
-      - [0x153E0, asm, codeseg1/code_26]
-      - [0x17100, asm, codeseg1/code_27]
-      - [0x17230, asm, codeseg1/code_28] 
+      - [0x153E0, c, codeseg1/code_26]
+      - [0x17100, c, codeseg1/code_27]
+      - [0x17230, c, codeseg1/code_28] 
     #  - [0x19A40, asm, codeseg1/code_29] # Merge for RODATA AD210
     #  - [0x22660, asm, codeseg1/code_30] # Merge for RODATA AD210
     #  - [0x24010, asm, codeseg1/code_31] # Merge for RODATA AD210
@@ -145,18 +151,19 @@ segments:
       - [0x56640, asm, codeseg1/code_61]
       - [0x568B0, asm, codeseg1/code_62]
       - [0x56BD0, asm, codeseg1/code_63]
-      - [0x572A0, asm, codeseg1/code_64]
-      - [0x5C780, asm, codeseg1/code_65]
+      - [0x572A0, c, codeseg1/code_64]
+      - [0x5C780, c, codeseg1/code_65]
       - [0x5F230, asm, codeseg1/code_66]
-      - [0x600F0, asm, codeseg1/code_67]
+      - [0x600F0, c, codeseg1/code_67]
       - [0x60DB0, asm, codeseg1/code_68]
-      - [0x615E0, asm, codeseg1/code_69]
+      - [0x615E0, .c, codeseg1/fadeout_gfx]
       - [0x61890, asm, codeseg1/code_70]
       - [0x62970, asm, codeseg1/code_71]
       - [0x62FC0, asm, codeseg1/code_72]
-      - [0x646B0, asm, codeseg1/code_73]
+      - [0x646B0, c, codeseg1/code_73]
       - [0x650D0, asm, codeseg1/code_74]
-      - [0x652A0, asm, codeseg1/code_75]
+      - [0x652A0, .c, codeseg1/rumble] #rumble
+      - [0x653D0, c, codeseg1/bootproc]
       - [0x65510, asm, codeseg1/code_76]
       - [0x65790, asm, codeseg1/code_77]
 
@@ -273,7 +280,7 @@ segments:
       - [0x75390, hasm, ../lib/libultra/src/libc/bcopy]
       - [0x756B0, hasm, ../lib/libultra/src/libc/bzero]
       - [0x75750, c, ../lib/libultra/src/libc/string]
-      - [0x757E0, asm, sprintf]
+      - [0x757E0, c, ./lib/libultra/src/libc/sprintf]
       - [0x75870, c, ../lib/libultra/src/os/createmesgqueue]
       - [0x758A0, c, ../lib/libultra/src/os/jammesg]
       - [0x759E0, c, ../lib/libultra/src/os/recvmesg]
@@ -379,19 +386,21 @@ segments:
       - [0x80F00, textbin, l3dex2]
 
       # Data
-      - [0x82090, bin, codeseg1/code_1]
-      - [0x820B0, bin, f3dex2_data]
-      - [0x82340, data, codeseg1/code_11]
-      - [0x83B20, data, codeseg1/code_12]
-      - [0x83C10, data, codeseg1/code_15]
-      - [0x83C60, data, codeseg1/code_16]
+      - [0x82090, data, codeseg1/code_1]
+      - [0x821B0, data, f3dex2_data]
+      - [0x83B20, .data, codeseg1/code_12] #code_11 was wrong code segment
+      - [0x83B80, data, codeseg1/code_14]
+      - [0x83C10, .data, codeseg1/code_15]
+      - [0x83C50, .data, codeseg1/code_16] # Double Check match
+      - [0x83C60, .data, codeseg1/libgte]
+      - [0x84170, data, codeseg1/code_17]
       - [0x841A0, data, codeseg1/code_19]
       - [0x87B50, data, codeseg1/code_20]
       - [0x87CF0, data, codeseg1/code_22]
-      - [0x87D50, data, codeseg1/code_23]
+      - [0x87D50, .data, codeseg1/code_23]
       - [0x87D60, data, codeseg1/code_25]
-      - [0x87D80, data, codeseg1/code_26]
-      - [0x87DE0, data, codeseg1/code_28]
+      - [0x87D80, .data, codeseg1/code_26]
+      - [0x87DE0, .data, codeseg1/code_28]
       - [0x87E10, data, codeseg1/code_29]
       - [0x87EB0, data, codeseg1/code_31]
       - [0x89950, data, codeseg1/code_37]
@@ -408,12 +417,12 @@ segments:
       - [0x99370, data, codeseg1/code_65]
       - [0xA1670, data, codeseg1/code_66]
       - [0xA9C50, data, codeseg1/code_67]
-      - [0xA9D20, data, codeseg1/code_69]
-      - [0xA9DA0, data, codeseg1/code_70]
+      - [0xA9D20, .data, codeseg1/fadeout_gfx]
+      - [0xA9D60, data, codeseg1/code_70]
       - [0xA9E00, data, codeseg1/code_71]
       - [0xA9E30, data, codeseg1/code_72]
-      - [0xA9F30, data, codeseg1/code_75]
-      - [0xA9F50, data, codeseg1/code_76]
+      - [0xA9F30, .data, codeseg1/rumble]
+      - [0xA9F40, data, codeseg1/code_76]
       - [0xA9F70, .data, ../lib/libmus/src/player]
       - [0xAA270, .data, ../lib/libnaudio/src/n_drvrNew]
       - [0xAA400, .data, ../lib/libnaudio/src/n_env]
@@ -458,12 +467,13 @@ segments:
       - [0xACDF0, bin, RSP_L3DEX_ucode]
 
       # Rodata
-      - [0xAD060, rodata, codeseg1/code_3] 
-      - [0xAD110, rodata, codeseg1/code_11]
+      - [0xAD060, .rodata, codeseg1/code_3] 
+      # - [0xAD098, rodata, codeseg1/code_10]
+      - [0xAD110, .rodata, codeseg1/perspective]
       - [0xAD150, rodata, codeseg1/code_19]
       - [0xAD190, rodata, codeseg1/code_22]
-      - [0xAD1F0, rodata, codeseg1/code_23]
-      - [0xAD210, rodata, codeseg1/code_28]
+      - [0xAD1F0, .rodata, codeseg1/code_23]
+      - [0xAD210, .rodata, codeseg1/code_28]
       - [0xAD840, rodata, codeseg1/code_37]
       - [0xADB00, rodata, codeseg1/code_40]
       - [0xADBF0, rodata, codeseg1/code_45]
@@ -472,8 +482,8 @@ segments:
       - [0xADF40, rodata, codeseg1/code_53]
       - [0xADFD0, rodata, codeseg1/code_54]
       - [0xAE030, rodata, codeseg1/code_59]
-      - [0xAE070, rodata, codeseg1/code_64]
-      - [0xAE0A0, rodata, codeseg1/code_67]
+      - [0xAE070, .rodata, codeseg1/code_64]
+      - [0xAE0A0, .rodata, codeseg1/code_67]
       - [0xAE110, .rodata, ../lib/libmus/src/player]
       - [0xAE200, .rodata, ../lib/libnaudio/src/n_drvrNew]
       - [0xAE2A0, .rodata, ../lib/libnaudio/src/n_resample]
@@ -495,6 +505,7 @@ segments:
       - [0xAE6E0, rodata, ../lib/libultra/src/libc/xprintf]
       - [0xAE860, rodata, ../lib/libultra/src/libc/xldtob]
       - { start: 0xAE8D0, type: bss, vram: 0x800D34D0, name: undefinedBSS }
+      - { type: bss, vram: 0x800d6FA0, name: codeseg1/code_3}
       - {  type: .bss, vram: 0x80184F70, name: ../lib/libmus/src/player}
       - {  type: .bss, vram: 0x80184FE0, name: ../lib/libmus/src/aud_dma}
       - {  type: .bss, vram: 0x80185020, name: ../lib/libmus/src/aud_sched}
@@ -520,7 +531,7 @@ segments:
     symbol_name_format: $VRAM_$SEG
     symbol_name_format_no_rom: $VRAM_$SEG
     type: code
-    exclusive_ram_id: overlay1
+    # exclusive_ram_id: overlay1
     start: 0xAE8D0
     vram: 0x8021D9D0
     subsegments:
@@ -1248,7 +1259,6 @@ segments:
       - [0x232C20, asm, ovl25/code_4]  # 80257820
       - [0x233140, asm, ovl25/code_5]  # 80257D40
       - [0x2334B0, asm, ovl25/code_6]  # 802580B0
-      - [0x233A60, asm, ovl25/code_7]  # 80258660
       - [0x233AE0, asm, ovl25/code_8]  # 802586E0
       - [0x234B60, asm, ovl25/code_9]  # 80259760
       - [0x234F90, asm, ovl25/code_10] # 80259B90
@@ -1652,6 +1662,7 @@ segments:
 
   - name: binary
     type: bin
+    exclusive_ram_id: data
     start: 0x2CAC60
     vram: 0x802ef860
     subsegments:

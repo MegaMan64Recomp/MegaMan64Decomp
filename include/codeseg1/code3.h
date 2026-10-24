@@ -1,6 +1,7 @@
 #ifndef _CODE3_H_
 #define _CODE3_H_
 #define F3DEX_GBI_2X
+#include "common.h"
 #include "PR/gbi.h"
 
 #define FILL_COLOR(r, g, b) (((GPACK_RGBA5551(r, g, b, 0) | 1) << 16) | (GPACK_RGBA5551(r, g, b, 0) | 1))
